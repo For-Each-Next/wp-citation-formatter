@@ -1,0 +1,136 @@
+.cf-source-manager__tool-dialog.cdx-dialog {
+    max-width: 64rem;
+}
+
+.cf-source-manager__cs1-message-frame {
+    display: flow-root;
+}
+
+.cf-source-analysis__intro {
+    color: var(--color-subtle, #54595d);
+    line-height: var(--line-height-medium, 1.6);
+    margin-block: 0 var(--spacing-150, 24px);
+    max-width: 75ch;
+}
+
+.cf-source-analysis__tabs .cdx-tab {
+    padding-block-start: var(--spacing-150, 24px);
+}
+
+.cf-source-analysis__findings {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-100, 16px);
+}
+
+.cf-source-analysis__finding {
+    border: 1px solid var(--border-color-muted, #dadde3);
+    border-radius: var(--border-radius-base, 2px);
+    padding: var(--spacing-100, 16px);
+}
+
+.cf-source-analysis__finding-heading > h4 {
+    font-size: var(--font-size-medium, 1rem);
+    margin: 0 0 var(--spacing-50, 8px);
+    overflow-wrap: anywhere;
+}
+
+.cf-source-analysis__finding-heading > p {
+    color: var(--color-subtle, #54595d);
+    line-height: var(--line-height-medium, 1.6);
+    margin: 0 0 var(--spacing-100, 16px);
+}
+
+.cf-source-analysis__radio-options {
+    align-items: center;
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--spacing-75, 12px);
+}
+
+.cf-source-analysis__custom-option {
+    align-items: center;
+    display: inline-flex;
+    flex: 1 1 18em;
+    gap: var(--spacing-75, 12px);
+}
+
+.cf-source-analysis__custom-option .cdx-text-input {
+    flex: 1 1 12em;
+    max-width: 24em;
+}
+
+.cf-source-analysis__selection-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--spacing-75, 12px);
+    justify-content: start;
+    margin-block-start: var(--spacing-100, 16px);
+}
+
+.cf-source-analysis__changed-row {
+    align-items: center;
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--spacing-75, 12px);
+    justify-content: space-between;
+}
+
+.cf-source-analysis__changed-row > span {
+    align-items: baseline;
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--spacing-50, 8px);
+}
+
+.cf-source-analysis__finding--changed {
+    background-color: var(--background-color-success-subtle, #d5fdf4);
+    border-color: var(--border-color-success, #099979);
+}
+
+.cf-source-analysis__occurrences {
+    list-style: none;
+    margin: var(--spacing-100, 16px) 0 0;
+    padding: 0;
+}
+
+.cf-source-analysis__occurrences li {
+    border-block-start: 1px solid var(--border-color-muted, #dadde3);
+    padding-block: var(--spacing-75, 12px);
+}
+
+.cf-source-analysis__occurrence-heading {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--spacing-50, 8px);
+    overflow-wrap: anywhere;
+}
+
+.cf-source-analysis__occurrences small {
+    color: var(--color-subtle, #54595d);
+    display: block;
+    margin-block-start: var(--spacing-25, 4px);
+    overflow-wrap: anywhere;
+}
+
+@media (max-width: 639px) {
+    .cf-source-analysis__custom-option {
+        align-items: stretch;
+        flex-direction: column;
+        width: 100%;
+    }
+
+    .cf-source-analysis__custom-option .cdx-text-input {
+        flex-basis: auto;
+        max-width: none;
+    }
+
+    .cf-source-analysis__selection-actions {
+        align-items: stretch;
+        flex-direction: column;
+    }
+
+    .cf-source-analysis__selection-actions > .cdx-button--weight-primary {
+        order: -1;
+    }
+}

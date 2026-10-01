@@ -1,0 +1,22 @@
+.cf-source-manager__parameter-alias-dialog.cdx-dialog {
+    max-width: 36rem;
+}
+
+.cf-source-manager__parameter-alias-fields {
+    display: grid;
+    gap: var(--spacing-150, 24px);
+}
+
+.cf-source-manager__parameter-alias-fields > .cdx-field {
+    margin: 0;
+}
+
+.cf-source-manager__parameter-alias-fields .cdx-text-area {
+    max-width: none;
+    min-width: 0;
+    width: 100%;
+}
+
+.cf-source-manager__parameter-alias-fields .cdx-text-area__textarea {
+    min-height: 2rem;
+}

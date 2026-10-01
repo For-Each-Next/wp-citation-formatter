@@ -1,0 +1,216 @@
+.cf-source-manager.cdx-dialog {
+    max-width: 68rem;
+}
+
+.cf-source-manager.cdx-dialog .cdx-dialog__body {
+    padding-block-start: 0;
+}
+
+.cf-source-manager__tabs > .cdx-tabs__header {
+    inset-block-start: 0;
+    position: sticky;
+    z-index: 1;
+}
+
+.cf-source-manager__tabs .cdx-tab {
+    padding-block-start: var(--spacing-150, 24px);
+}
+
+.cf-source-manager__section-heading {
+    color: var(--color-base, #202122);
+    font-size: var(--font-size-medium, 1rem);
+    font-weight: var(--font-weight-bold, 700);
+    line-height: var(--line-height-medium, 1.6);
+    margin: 0 0 var(--spacing-75, 12px);
+}
+
+.cf-source-manager__section-description {
+    color: var(--color-subtle, #54595d);
+    line-height: var(--line-height-medium, 1.6);
+    margin: 0 0 var(--spacing-100, 16px);
+    max-width: 75ch;
+}
+
+.cf-source-manager__source-lookup {
+    max-width: 40rem;
+}
+
+.cf-source-manager__source-lookup-controls {
+    align-items: end;
+    display: grid;
+    gap: var(--spacing-75, 12px);
+    grid-template-columns: minmax(0, 1fr) auto;
+}
+
+.cf-source-manager__manual-source {
+    align-items: end;
+    border-block-start: 1px solid var(--border-color-muted, #dadde3);
+    display: grid;
+    gap: var(--spacing-100, 16px) var(--spacing-150, 24px);
+    grid-template-columns: minmax(0, 1fr);
+    margin-block-start: var(--spacing-150, 24px);
+    max-width: 40rem;
+    padding-block-start: var(--spacing-150, 24px);
+}
+
+.cf-source-manager__manual-source > h3,
+.cf-source-manager__manual-source > p,
+.cf-source-manager__create-source {
+    grid-column: 1 / -1;
+}
+
+.cf-source-manager__manual-source > h3,
+.cf-source-manager__manual-source > p {
+    margin-block-end: 0;
+}
+
+.cf-source-manager__manual-source > .cdx-field {
+    margin: 0;
+}
+
+.cf-source-manager__create-source {
+    justify-self: start;
+}
+
+.cf-source-manager__manual-source .cdx-select-vue {
+    max-width: none;
+    width: 100%;
+}
+
+.cf-source-manager__manual-source .cdx-select-vue__handle {
+    min-width: 0;
+}
+
+.cf-source-manager__source-lookup .cdx-field__help-text:empty,
+.cf-source-manager__manual-source .cdx-field__help-text:empty {
+    display: none;
+}
+
+.cf-source-manager__source-filters {
+    background-color: var(--background-color-interactive-subtle, #f8f9fa);
+    border: 1px solid var(--border-color-muted, #dadde3);
+    border-radius: var(--border-radius-base, 2px);
+    display: grid;
+    gap: var(--spacing-100, 16px);
+    padding: var(--spacing-100, 16px);
+}
+
+.cf-source-manager__filter-field {
+    display: grid;
+    gap: var(--spacing-50, 8px);
+    margin: 0;
+    min-width: 0;
+}
+
+.cf-source-manager__filter-label {
+    font-weight: var(--font-weight-bold, 700);
+    line-height: var(--line-height-medium, 1.6);
+}
+
+.cf-source-manager__filter-controls {
+    display: grid;
+    gap: var(--spacing-75, 12px);
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 14em), 1fr));
+    min-width: 0;
+    width: 100%;
+}
+
+.cf-source-manager__filter-controls > .cdx-combobox {
+    max-width: 100%;
+    min-width: 0;
+    width: 100%;
+}
+
+.cf-source-manager__source-table {
+    margin-block-start: var(--spacing-100, 16px);
+    max-width: 100%;
+}
+
+.cf-source-manager__source-table table {
+    table-layout: fixed;
+    width: 100%;
+}
+
+.cf-source-manager.cdx-dialog .cf-source-manager__source-table th,
+.cf-source-manager.cdx-dialog .cf-source-manager__source-table td {
+    vertical-align: middle;
+}
+
+.cf-source-manager__source-reference,
+.cf-source-manager__source-reference-name,
+.cf-source-manager__source-title {
+    min-width: 0;
+    overflow-wrap: anywhere;
+}
+
+.cf-source-manager__source-reference-name,
+.cf-source-manager__source-details {
+    display: block;
+}
+
+.cf-source-manager__source-reference-name {
+    font-size: var(--font-size-small, 0.875rem);
+}
+
+.cf-source-manager__source-details {
+    color: var(--color-subtle, #54595d);
+    font-weight: var(--font-weight-normal, 400);
+    margin-block-start: var(--spacing-25, 4px);
+    overflow-wrap: anywhere;
+}
+
+.cf-source-manager__source-table .cf-source-manager__source-actions {
+    gap: var(--spacing-25, 4px);
+}
+
+.cf-source-manager__tools {
+    display: grid;
+    gap: var(--spacing-150, 24px);
+}
+
+.cf-source-manager__advanced-formatting {
+    margin: 0;
+    max-width: 40rem;
+}
+
+.cf-source-manager__advanced-formatting > .cdx-field__control > .cdx-field {
+    border-inline-start: 2px solid var(--border-color-muted, #dadde3);
+    margin-block-start: var(--spacing-100, 16px);
+    padding-inline-start: var(--spacing-100, 16px);
+}
+
+.cf-source-manager__tool-section {
+    border-block-start: 1px solid var(--border-color-muted, #dadde3);
+    padding-block-start: var(--spacing-150, 24px);
+}
+
+.cf-source-manager__tool-launchers {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--spacing-75, 12px);
+}
+
+@media (max-width: 639px) {
+    .cf-source-manager__source-lookup-controls,
+    .cf-source-manager__manual-source {
+        align-items: stretch;
+        grid-template-columns: 1fr;
+    }
+
+    .cf-source-manager__create-source {
+        justify-self: stretch;
+    }
+
+    .cf-source-manager__filter-controls {
+        grid-template-columns: minmax(0, 1fr);
+    }
+
+    .cf-source-manager__source-table .cdx-table__table {
+        min-width: 36rem;
+    }
+
+    .cf-source-manager__tool-launchers {
+        align-items: stretch;
+        flex-direction: column;
+    }
+}

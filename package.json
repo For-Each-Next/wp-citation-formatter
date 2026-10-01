@@ -1,0 +1,98 @@
+{
+    "name": "citation-formatter",
+    "version": "0.1.0",
+    "description": "Format and manage citations in MediaWiki source editors.",
+    "private": true,
+    "license": "CC0-1.0",
+    "type": "module",
+    "browser": "./src/app/browser.ts",
+    "scripts": {
+        "build": "node scripts/build.mjs",
+        "check": "npm run format:check && npm run lint && npm run check:types && npm run check:unused",
+        "check:types": "vue-tsc --noEmit -p tsconfig.json && tsc --noEmit -p tsconfig.tests.json",
+        "check:unused": "knip",
+        "format": "prettier --write . \"!package-lock.json\"",
+        "format:check": "prettier --check . \"!package-lock.json\"",
+        "lint": "eslint . --max-warnings=0 && npm run lint:css",
+        "lint:css": "stylelint \"src/**/*.css\"",
+        "test": "node --test tests/*.test.ts",
+        "test:ui": "npm run build && node scripts/test-ui.mjs",
+        "update:template-data": "node scripts/update-citation-template-data.ts",
+        "verify": "npm run check && npm test && npm run test:ui"
+    },
+    "devDependencies": {
+        "@eslint/js": "10.0.1",
+        "@playwright/test": "^1.62.1",
+        "@types/node": "^24.19.0",
+        "@vue/compiler-sfc": "3.5.13",
+        "@wikimedia/codex": "^2.6.0",
+        "@wikimedia/codex-icons": "2.7.0",
+        "esbuild": "^0.28.0",
+        "eslint": "10.11.0",
+        "globals": "17.12.0",
+        "html-minifier-terser": "^7.2.0",
+        "knip": "6.38.0",
+        "prettier": "3.9.9",
+        "stylelint": "^17.14.0",
+        "stylelint-config-recommended": "^18.0.0",
+        "terser": "^5.48.0",
+        "types-mediawiki": "^2.1.0",
+        "typescript": "^6.0.3",
+        "typescript-eslint": "8.70.1",
+        "vue": "3.5.13",
+        "vue-tsc": "^3.3.8"
+    },
+    "engines": {
+        "node": ">=24.14.1"
+    },
+    "prettier": {
+        "tabWidth": 4,
+        "overrides": [
+            {
+                "files": [
+                    "*.md",
+                    "*.yml",
+                    "*.yaml"
+                ],
+                "options": {
+                    "tabWidth": 2
+                }
+            }
+        ]
+    },
+    "stylelint": {
+        "extends": [
+            "stylelint-config-recommended"
+        ],
+        "rules": {
+            "declaration-property-value-keyword-no-deprecated": null,
+            "no-descending-specificity": null
+        }
+    },
+    "knip": {
+        "entry": [
+            "src/index.ts!",
+            "src/app/userscript.ts!",
+            "src/types/**/*.d.ts!",
+            "src/features/dialogs/*.vue!",
+            "tests/**/*.test.ts",
+            "tests/ui/**/*.spec.ts",
+            "scripts/*.{mjs,ts}"
+        ],
+        "project": [
+            "src/**/*.{ts,vue}!",
+            "tests/**/*.ts",
+            "scripts/*.{mjs,ts}"
+        ],
+        "include": [
+            "files",
+            "dependencies",
+            "devDependencies",
+            "optionalPeerDependencies",
+            "unlisted",
+            "binaries",
+            "unresolved",
+            "duplicates"
+        ]
+    }
+}
