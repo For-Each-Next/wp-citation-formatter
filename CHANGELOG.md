@@ -2,6 +2,20 @@
 
 ## Unreleased
 
+## 0.2.0 - 2026-10-02
+
+- Preserve native Cite sub-reference details while formatting and organizing
+  main references, including template-valued details and grouped names.
+- Show author/year source rows with native sub-references underneath. Merge
+  identical details into one child row with its use count; reuse copies details
+  into a fresh call, and edit updates all uses in that row. Ctrl/Command-click
+  on Use opens a details draft with a wikitext preview.
+- Keep a source's main row visible while scrolling its sub-references, show
+  sub-reference counts below author/year, and use dotted dividers within each
+  source group.
+- Prevent empty citation fields from displacing populated authors or creating
+  false repeated-parameter warnings.
+
 ## 0.1.0 - 2026-10-01
 
 - Introduce Citation Formatter as a standalone MediaWiki gadget with its own

@@ -1,0 +1,27 @@
+== 游戏玩法 ==
+
+<ref name="UCG" details="阿修罗. {{url|https://archive.org/details/UCG-2006/%E6%B8%B8%E6%88%8F%E6%9C%BA%E5%AE%9E%E7%94%A8%E6%8A%80%E6%9C%AF%20152%202006.6A/page/n59/mode/2up|Mother3 攻略透解 奇妙、有趣，还有发自内心的伤感……}} :58-63" />
+
+<ref name="UCG" details="阿修罗. {{url|https://archive.org/details/UCG-2006/%E6%B8%B8%E6%88%8F%E6%9C%BA%E5%AE%9E%E7%94%A8%E6%8A%80%E6%9C%AF%20152%202006.6A/page/n59/mode/2up|Mother3 攻略透解 奇妙、有趣，还有发自内心的伤感……}} :58-63">[[游戏机实用技术]]. 2006, '''6A''' (152). CN 62-1137/TN. ISSN 1008-0600</ref>
+
+== 故事情节 ==
+
+<ref name="DREAM" details="{{URL|https://web.archive.org/web/20150403065006/http://www.nindori.com/interview/m3/m3int_08.html|55億年後になくなる地球}}. 完結編 :2（{{URL|http://www.nindori.com/interview/m3/m3int_08.html|原始内容}}存档于2015-04-03）" />
+
+== 开发 ==
+
+<ref name="Hobonichi2006" details="{{URL|https://www.1101.com/mother_project/entry/archives/MOTHER3/kimochi/01.html|第1回 『MOTHER3』の再開。}}. 2006-04-18" />
+
+=== 设计 ===
+
+<ref name="Hobonichi2006" details="{{URL|https://www.1101.com/mother_project/entry/archives/MOTHER3/kimochi/04.html|第4回 最初の『MOTHER3』の話。}}. 2006-04-21">{{Cite web |script-title=ja:『MOTHER3』の気持ち。 |url=https://www.1101.com/mother_project/entry/archives/MOTHER3/kimochi/ |website=ほぼ日 |date=2006 |language=ja |author=永田泰大 |access-date=2026-09-18 |archive-url=https://web.archive.org/web/20260918120048/https://www.1101.com/mother_project/entry/archives/MOTHER3/kimochi/ |archive-date=2026-09-18 |url-status=live}}</ref>
+
+<ref name="DREAM" details="{{URL|https://web.archive.org/web/20150226100724/http://www.nindori.com/interview/m3/index.html|ホットケーキを焼くのとはワケが違う}}. 前編 :1（{{URL|http://www.nindori.com/interview/m3/index.html|原始内容}}存档于2015-02-26）">{{cite web |script-title=ja:糸井重里さん『MOTHER3』を大いに語る |url=http://www.nindori.com/interview/m3/index.html |work=[[任天堂Dream|Nintendo DREAM]] |date=2006-07 / 2006-08 |language=ja |url-status=dead |archive-url=https://web.archive.org/web/20150226100724/http://www.nindori.com/interview/m3/index.html |archive-date=2015-02-26 |access-date=2026-09-18 |page= |at=}}</ref>
+
+== 反响 ==
+
+<ref name="UCG" details="猫太; 邪魔天使; 阿修罗. Ace飞行员 , 编. {{url|https://archive.org/details/UCG-2006/%E6%B8%B8%E6%88%8F%E6%9C%BA%E5%AE%9E%E7%94%A8%E6%8A%80%E6%9C%AF%20152%202006.6A/page/n25/mode/2up|黄金眼 最近发售游戏的多视角评价}} :25" />
+
+== 参考资料 ==
+
+{{reflist|30em}}

@@ -49,6 +49,51 @@ test(
     testNonLatinNameOverrides,
 );
 
+test("keeps citation-like templates in sub-reference details out of name edits", () => {
+    const hiddenCitation =
+        "{{Cite web|author=隐藏作者|title=Details template}}";
+    const source =
+        `<ref name="Book" details="${hiddenCitation}">` +
+        "{{Cite web|author=可见作者|title=Main source}}</ref>" +
+        `<ref name="Book" details="${hiddenCitation}" />`;
+    const fields = findNameOverrideFields(source);
+
+    assert.deepEqual(
+        fields.map((field) => field.displayValue),
+        ["可见作者"],
+    );
+    const result = applyNameOverrides(source, [
+        { ids: [`${source.indexOf(hiddenCitation)}:0`], override: "Hidden" },
+        { ids: fields[0].ids, override: "Visible" },
+    ]);
+    assert.equal(result.split(hiddenCitation).length - 1, 2);
+    assert.match(result, /author=可见作者 <!-- # Visible -->/u);
+    assert.doesNotMatch(result, /# Hidden/u);
+});
+
+test("leaves detail templates native during R expansion and layout detection", () => {
+    const source =
+        '<ref name="Book" details="{{r|Other}}">' +
+        '{{Cite web|title=Main}}</ref><ref name="Book" details="{{r|Other}}" />';
+    assert.equal(expandCompactReferenceCalls(source), source);
+    assert.equal(compactReferenceCalls(source), source);
+    const blockDetail =
+        '<ref name="Book" details="{{Cite book\n|title=Hidden}}">{{Cite web|title=Main}}</ref>';
+    assert.equal(detectCitationLayout(blockDetail), "inline");
+    assert.equal(
+        expandCompactReferenceCalls('{{r|A"B}}'),
+        '<ref name="A&quot;B" />',
+    );
+});
+
+test("keeps entity-bearing native reference names out of compact R calls", () => {
+    const source =
+        '<ref name="A&amp;quot;B" /><ref name="A&quot;B" />' +
+        '<ref name="A&amp;B" />';
+    assert.equal(compactReferenceCalls(source), source);
+    assert.equal(expandCompactReferenceCalls(source), source);
+});
+
 const testNoAuthorOverrideEdits = () => {
     const source = [
         "{{Cite web|website=游民星空",

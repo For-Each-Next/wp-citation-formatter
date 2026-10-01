@@ -19,11 +19,42 @@ before inserting or updating the source.
 ## Browse and reuse
 
 Use the sources tab to filter by keyword or article section. Source entries
-show their reference identity, title, and uses. Choose the reuse action to
-insert a reference at the cursor, or edit to open the source details.
+show their author and year, title, and uses; the reference name is available
+in the metadata tooltip. Choose the use action to insert a reference at the
+cursor, or edit to open the source details.
 Bibliography citations used by `{{sfn}}` retain their short-footnote behavior.
 The tabs stay visible while the list scrolls. Use and edit actions appear as
 icon buttons with tooltips, leaving more room for source titles.
+
+Repeated uses of a named footnote share one source entry within their reference
+group. Native sub-references with identical details share one row beneath their
+source title. The row header shows the number of uses, such as **4×**.
+**Reuse sub-reference** inserts a fresh call with the same details;
+**Edit sub-reference** updates every matching use represented by that row.
+Saving refreshes the list, and session undo can restore the change.
+
+Solid dividers separate sources, and dotted dividers separate their
+sub-reference details. The line beneath author/year shows the total uses and
+how many are sub-references, such as **7× (with 3 sub-refs)**. While scrolling
+through a source's sub-references, its main row stays visible beneath the tabs
+until the next source replaces it.
+
+![Sources with sub-reference occurrences](images/sub-reference-sources.png)
+
+[View the mobile source list](images/sub-reference-sources-mobile.png).
+
+The main **Use source** action inserts its main reference. Hold **Ctrl** or
+**Command** while clicking it to open **Use with details** and add a page,
+timestamp, quotation, or other detail in a separate dialog. The details field
+accepts wikitext, including templates such as
+`{{URL|https://example.test/page|Page title}}`. Check the generated wikitext
+preview before inserting the sub-reference at the cursor; its `details`
+attribute shares the main reference name. Clearing the details when editing
+a sub-reference row turns its matching uses into ordinary main-reference uses.
+
+![Use with details dialog](images/reference-details.png)
+
+[View the mobile details dialog](images/reference-details-mobile.png).
 
 ## Format and review
 
@@ -31,6 +62,12 @@ The tools tab groups formatting, reference organization, and citation review.
 Choose inline or block formatting and inspect options before applying a
 transformation. Naming and reference-organization operations keep unsupported
 syntax intact. See [reference names](reference-names.md) for the rules.
+
+Formatting preserves each native sub-reference's `details` attribute while
+organizing its shared main definition. References with the same name remain
+separate across groups. An explicit `group=""` in article prose uses the default
+group; definitions inside `<references group="note">` use that list's group,
+including definitions with an empty group attribute.
 
 Local checks provide immediate citation feedback. On English and Chinese
 Wikipedia, saving a new citation also runs live CS1 validation; errors or an

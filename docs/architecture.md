@@ -64,5 +64,7 @@ editing. Tests cover these boundaries with fixture editor implementations.
 
 The build uses esbuild for ES2024 output and injects authored templates and
 CSS. Vue and Codex components remain supplied by MediaWiki. Only selected
-Codex icon data is bundled from npm, with its notices embedded in the
-generated files. No module depends on another local gadget checkout.
+Codex icon data and the HTML entity decoder from `entities` are bundled from npm,
+with their notices embedded in the generated files. The decoder keeps reference
+attribute identities consistent without depending on a browser DOM. No module
+depends on another local gadget checkout.

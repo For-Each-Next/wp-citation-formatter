@@ -11,14 +11,18 @@ import {
     findCitationFormattingProtectedRanges,
     findCitationManagementProtectedRanges,
     findSourceDiscoveryProtectedRanges,
+    findReferenceAttributeRanges,
     isInWikitextRanges,
     maskWikitextRanges,
 } from "../src/domain/protected-wikitext.ts";
 import {
     decodeReferenceAttribute,
+    decodeReferenceDetailsAttribute,
     escapeQuotedAttribute,
+    escapeReferenceDetails,
     escapeReferenceName,
     formatReferenceGroupAttribute,
+    formatReferenceDetailsAttribute,
     stripOptionalReferenceNameQuotes,
 } from "../src/domain/ref-attributes.ts";
 
@@ -62,6 +66,10 @@ test("preserves historical reference-attribute entity policies", () => {
         decodeReferenceAttribute("A&amp;B&#38;C&#x26;D&quot;"),
         'A&B&C&D"',
     );
+    assert.equal(
+        decodeReferenceAttribute("A&#34;B&#x22;C&apos;D&lt;E&gt;&amp;quot;"),
+        'A"B"C\'D<E>&quot;',
+    );
     assert.equal(escapeQuotedAttribute('A&B"'), "A&amp;B&quot;");
     assert.equal(escapeReferenceName('A&amp;"'), "A&&quot;");
     assert.equal(escapeReferenceName('A&AMP;"'), "A&AMP;&quot;");
@@ -76,4 +84,51 @@ test("preserves historical reference-attribute entity policies", () => {
         ' group="note &amp; &quot;quote&quot;"',
     );
     assert.equal(stripOptionalReferenceNameQuotes(" 'Example' "), "Example");
+});
+
+test("decodes details entities once and preserves quoted attribute wikitext", () => {
+    assert.equal(
+        decodeReferenceDetailsAttribute(
+            "&amp;quot; &quot; &apos; &lt; &gt; &#34; &#x1f600;",
+        ),
+        '&quot; " \' < > " 😀',
+    );
+    assert.equal(
+        decodeReferenceDetailsAttribute("&#0; &#xD800; &#x110000;"),
+        "&#0; &#xD800; &#x110000;",
+    );
+    assert.equal(formatReferenceDetailsAttribute(undefined), "");
+    assert.equal(formatReferenceDetailsAttribute(""), ' details=""');
+    assert.equal(
+        formatReferenceDetailsAttribute('{{lang|en|"quoted"}} &lt;p. 23&gt;'),
+        ' details="{{lang|en|&quot;quoted&quot;}} &lt;p. 23&gt;"',
+    );
+    assert.equal(
+        escapeReferenceDetails('A&B "<p. 23>"'),
+        "A&amp;B &quot;&lt;p. 23&gt;&quot;",
+    );
+});
+
+test("decodes HTML5 named entities once while preserving literal or unknown entity text", () => {
+    assert.equal(decodeReferenceAttribute("&eacute;&NotEqualTilde;"), "é≂̸");
+    assert.equal(decodeReferenceAttribute("&amp;eacute;"), "&eacute;");
+    assert.equal(
+        decodeReferenceAttribute("&Quot;&notanentity;"),
+        "&Quot;&notanentity;",
+    );
+});
+
+test("protects templates in reference openings while leaving source bodies active", () => {
+    const text =
+        '<ref name="Book" details="{{r|Other}}">{{Cite book|title=Book}}</ref><ref name="Book" details="{{lang|en|p. 23}}" />';
+    const ranges = findReferenceAttributeRanges(text);
+
+    assert.equal(ranges.length, 2);
+    assert.equal(isInWikitextRanges(text.indexOf("{{r|"), ranges), true);
+    assert.equal(isInWikitextRanges(text.indexOf("{{lang|"), ranges), true);
+    assert.equal(
+        isInWikitextRanges(text.indexOf("{{Cite book|"), ranges),
+        false,
+    );
+    assert.equal(maskWikitextRanges(text, ranges).length, text.length);
 });

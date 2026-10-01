@@ -4,7 +4,10 @@
 
 import {
     filterExistingSources,
+    getSourceDraftCitationNameCells,
+    getSourceDraftCitationNameParts,
     type ExistingSource,
+    type ExistingSourceSubReference,
     type SourceSection,
 } from "../domain/source-manager.ts";
 import { getCanonicalTemplateNameFromKey } from "../domain/templates.ts";
@@ -32,9 +35,19 @@ export interface SourceTableRow {
     id: string;
     reference: string;
     source: string;
+    sourceId: string;
+    subReferenceId: string;
+    subReferenceIds: string[];
+    subReferenceCount: number;
     titleLanguage: string;
     usageCount: number;
     usageTitle: string;
+    usageSummary: string;
+}
+
+export interface SourceTableGroup {
+    source: SourceTableRow;
+    subReferences: SourceTableRow[];
 }
 
 interface SourceListDerivedInputs {
@@ -62,6 +75,7 @@ export interface SourceListDerivedState {
     };
     sourceTablePaginationKey: { readonly value: string };
     sourceTableRows: { readonly value: SourceTableRow[] };
+    sourceTableGroups: { readonly value: SourceTableGroup[] };
 }
 
 /**
@@ -145,18 +159,38 @@ export function createSourceListDerivedState(
             state.existingSourceSections.value,
         );
     }
+    function getSourceTableGroups(): SourceTableGroup[] {
+        return filteredExistingSources.value.map((source) => {
+            const row = toSourceTableRow(
+                source,
+                state.existingSourceSections.value,
+            );
+            return {
+                source: row,
+                subReferences: toSubReferenceTableRows(
+                    row,
+                    source.subReferences ?? [],
+                    state.existingSourceSections.value,
+                ),
+            };
+        });
+    }
     function getSourceTableRows(): SourceTableRow[] {
-        return filteredExistingSources.value.map((source) =>
-            toSourceTableRow(source, state.existingSourceSections.value),
-        );
+        return sourceTableGroups.value.flatMap((group) => [
+            group.source,
+            ...group.subReferences,
+        ]);
     }
     function getSourceTablePaginationKey(): string {
         return [
             state.existingSourceQuery.value,
             ...state.sourceSectionPath.value,
             String(filteredExistingSources.value.length),
+            String(sourceTableRows.value.length),
         ].join("\u0000");
     }
+    const sourceTableGroups = Vue.computed(getSourceTableGroups);
+    const sourceTableRows = Vue.computed(getSourceTableRows);
     return {
         basedOnSourceOptions: Vue.computed(getBasedOnSourceOptions),
         filteredExistingSources,
@@ -166,7 +200,8 @@ export function createSourceListDerivedState(
         sectionFilterLabel: Vue.computed(getSectionFilterLabel),
         sourceSectionSelectors: Vue.computed(getSelectors),
         sourceTablePaginationKey: Vue.computed(getSourceTablePaginationKey),
-        sourceTableRows: Vue.computed(getSourceTableRows),
+        sourceTableRows,
+        sourceTableGroups,
     };
 }
 
@@ -186,10 +221,12 @@ function toSourceTableRow(
             ? msg("lookup.nonStandard")
             : getCanonicalTemplateNameFromKey(source.draft.template);
     const usageTitle = formatSourceUsageTitle(source, sections);
+    const subReferenceCount = source.subReferences?.length ?? 0;
     return {
         actions: "",
         details,
         detailsTitle: [
+            source.referenceName,
             details,
             source.group === ""
                 ? ""
@@ -200,12 +237,113 @@ function toSourceTableRow(
             .join(" · "),
         group: source.group,
         id: source.id,
-        reference: source.referenceName || msg("common.unnamed"),
+        reference: formatSourceAuthorYear(source),
         source: source.title || source.url || msg("common.untitledSource"),
+        sourceId: source.id,
+        subReferenceId: "",
+        subReferenceIds: [],
+        subReferenceCount,
         titleLanguage: source.titleLanguage,
         usageCount: source.usageCount,
         usageTitle,
+        usageSummary:
+            subReferenceCount > 0
+                ? msg("lookup.sourceUsageWithSubReferences", {
+                      count: source.usageCount,
+                      subCount: subReferenceCount,
+                  })
+                : `${source.usageCount}×`,
     };
+}
+
+/**
+ * Groups matching details beneath one source in their first-use order.
+ *
+ * @param sourceRow - Parent source's table row.
+ * @param subReferences - Native sub-reference occurrences.
+ * @param sections - Article sections.
+ * @returns One row for each exact decoded details value.
+ */
+function toSubReferenceTableRows(
+    sourceRow: SourceTableRow,
+    subReferences: ExistingSourceSubReference[],
+    sections: SourceSection[],
+): SourceTableRow[] {
+    const grouped = new Map<string, ExistingSourceSubReference[]>();
+    for (const subReference of subReferences) {
+        const occurrences = grouped.get(subReference.details) ?? [];
+        occurrences.push(subReference);
+        grouped.set(subReference.details, occurrences);
+    }
+    return [...grouped.values()].map((occurrences) =>
+        toSubReferenceTableRow(sourceRow, occurrences, sections),
+    );
+}
+
+/**
+ * Presents one details value with the usage count of all matching occurrences.
+ *
+ * @param sourceRow - Parent source's table row.
+ * @param occurrences - Matching native sub-reference occurrences.
+ * @param sections - Article sections.
+ * @returns Row with matching occurrences' actions, details, and usage sections.
+ */
+function toSubReferenceTableRow(
+    sourceRow: SourceTableRow,
+    occurrences: ExistingSourceSubReference[],
+    sections: SourceSection[],
+): SourceTableRow {
+    const subReference = occurrences[0]!;
+    const usageCount = occurrences.length;
+    const usageTitle = formatSourceUsageTitle(
+        {
+            sectionIds: occurrences.flatMap(
+                (occurrence) => occurrence.sectionIds,
+            ),
+            usageCount,
+        },
+        sections,
+    );
+    return {
+        ...sourceRow,
+        details: "",
+        detailsTitle: usageTitle,
+        id: `${sourceRow.id}:${subReference.id}`,
+        source: subReference.details,
+        subReferenceId: subReference.id,
+        subReferenceIds: occurrences.map((occurrence) => occurrence.id),
+        subReferenceCount: 0,
+        titleLanguage: "",
+        usageCount,
+        usageTitle,
+        usageSummary: `${usageCount}×`,
+    };
+}
+
+/**
+ * Uses available citation identity metadata for the compact source label.
+ *
+ * @param source - Source definition.
+ * @returns Author and year, or the source's reference name.
+ */
+function formatSourceAuthorYear(source: ExistingSource): string {
+    if (source.status === "standard") {
+        try {
+            if (getSourceDraftCitationNameCells(source.draft).size === 0) {
+                return source.referenceName || msg("common.unnamed");
+            }
+            const { author, year } = getSourceDraftCitationNameParts(
+                source.draft,
+            );
+            const identity = [author, year].filter(isNonEmpty).join(", ");
+            if (identity !== "") {
+                return identity;
+            }
+        } catch {
+            // Unsupported citation content still has a usable reference label.
+        }
+    }
+    return source.referenceName || msg("common.unnamed");
 }
 
 function isNonEmpty(value: string): boolean {

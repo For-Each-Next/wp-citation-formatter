@@ -28,7 +28,8 @@ import {
 } from "./reference-containers.ts";
 import {
     decodeReferenceAttribute,
-    escapeReferenceName,
+    escapeReferenceDetails,
+    formatReferenceDetailsAttribute,
     formatReferenceGroupAttribute,
 } from "./ref-attributes.ts";
 import {
@@ -54,6 +55,7 @@ import type {
 import { applyReplacements } from "./wikitext.ts";
 import {
     findCitationFormattingProtectedRanges,
+    findReferenceAttributeRanges,
     isInWikitextRanges,
 } from "./protected-wikitext.ts";
 
@@ -92,6 +94,8 @@ interface ReferenceDefinition {
     group: string;
     identity?: CitationIdentity;
     oldName: string;
+    preserveInPlace?: boolean;
+    listDefinedDetails?: string;
     order: number;
     parameterCollisions: number;
     section: string;
@@ -188,7 +192,10 @@ function findUsedTemplateNames(
     matches: (name: string) => boolean,
     normalizeName: (name: string) => string,
 ): string[] {
-    const protectedRanges = findCitationFormattingProtectedRanges(text);
+    const protectedRanges = [
+        ...findCitationFormattingProtectedRanges(text),
+        ...findReferenceAttributeRanges(text),
+    ];
     const calls = findTemplateCalls(text);
     const isUsedCitation = function isUsedCitation(call: ParsedTemplateCall) {
         const result =
@@ -276,6 +283,7 @@ export function formatCitationWikitext(
         rConverted,
         leadSectionLabel,
     );
+    preserveConflictingNamedDefinitions(definitions, tags, containers);
     assignCitationNames(definitions);
     assignLinkedCitationNames(
         definitions,
@@ -286,7 +294,12 @@ export function formatCitationWikitext(
     assignFallbackNames(definitions);
     preserveUnconvertedRNames(definitions, preservedRNames);
     ensureUniqueReferenceNames(definitions, preservedRNames);
-    const replacements = buildAllReplacements(tags, containers, definitions);
+    const replacements = buildAllReplacements(
+        tags,
+        containers,
+        definitions,
+        rConverted,
+    );
     let text = applyReplacements(rConverted, replacements);
     text = appendMissingReferenceContainers(text, containers, definitions);
 
@@ -317,7 +330,12 @@ function summarizeFormatting(
     text: string,
     rTemplatesFound: number,
 ): CitationFormatResult {
-    const individual = uniqueDefinitions(definitions);
+    const individual = [
+        ...Map.groupBy(
+            uniqueDefinitions(definitions),
+            getFinalReferenceNameKey,
+        ).values(),
+    ].map((grouped) => grouped[0]);
     const isTagOutsideContainers = (tag: RefTag) =>
         !isTagInContainers(tag, containers);
     const isDefinitionOutsideContainers =
@@ -344,8 +362,9 @@ function summarizeFormatting(
         referencesNotFormatted: individual.filter(
             (definition) => definition.formattingStatus === "unsupported",
         ).length,
-        referencesMoved: definitions.filter(isDefinitionOutsideContainers)
-            .length,
+        referencesMoved: definitions
+            .filter(isDefinitionOutsideContainers)
+            .filter((definition) => !definition.preserveInPlace).length,
         rTemplatesFound,
         text,
     };
@@ -375,14 +394,17 @@ function countRenamedReferenceTags(
         const oldName = tag.attributes.name || "";
         const definition = definitionsByStart.get(tag.start);
         if (definition != null) {
-            return definition.finalName !== oldName;
+            return definition.finalName !== decodeReferenceAttribute(oldName);
         }
         if (isTagInContainers(tag, containers)) {
             return false;
         }
         const group = tag.attributes.group || "";
-        const finalName = oldNameMap.get(`${group}\u0000${oldName}`) ?? oldName;
-        return finalName !== oldName;
+        const decodedName = decodeReferenceAttribute(oldName);
+        const finalName =
+            oldNameMap.get(buildReferenceNameKey(group, oldName)) ??
+            decodedName;
+        return finalName !== decodedName;
     }).length;
 }
 
@@ -417,7 +439,9 @@ function buildReferenceDefinitions(
         tag: RefTag,
         order: number,
     ) {
-        const group = getContainingGroup(tag, containers);
+        const group = isTagInContainers(tag, containers)
+            ? getContainingGroup(tag, containers)
+            : (tag.attributes.group ?? "");
         const trailingText = getTrailingContainerText(
             tag,
             containers,
@@ -434,6 +458,9 @@ function buildReferenceDefinitions(
             templateNameContext,
             trailingText,
         });
+        if (isTagInContainers(tag, containers)) {
+            result.listDefinedDetails = tag.attributes.details;
+        }
         return result;
     };
     const result = fullTags.map(buildDefinition);
@@ -452,6 +479,7 @@ function buildAllReplacements(
     tags: RefTag[],
     containers: ReferenceContainer[],
     definitions: ReferenceDefinition[],
+    source: string,
 ): TextReplacement[] {
     const oldNameMap = buildOldNameMap(definitions);
     const tagReplacements = buildTagReplacements(
@@ -463,6 +491,8 @@ function buildAllReplacements(
     const containerReplacements = buildContainerReplacements(
         containers,
         definitions,
+        tags,
+        source,
     );
     const result = removeNestedReplacements([
         ...tagReplacements,
@@ -487,7 +517,8 @@ function createReferenceDefinition({
     templateNameContext,
     trailingText,
 }: ReferenceDefinitionOptions): ReferenceDefinition {
-    const group = tag.attributes.group || containingGroup;
+    // Cite coerces even an explicit, mismatching group to its list's group.
+    const group = containingGroup;
     const trimmed = tag.content.trim();
     const plainOptions = {
         content: trimmed,
@@ -661,7 +692,10 @@ function buildShortCitationSourceMap(
     templateNameContext: TemplateNameContext,
 ): Map<string, CitationIdentity> {
     const result = new Map<string, CitationIdentity>();
-    const protectedRanges = findCitationFormattingProtectedRanges(source);
+    const protectedRanges = [
+        ...findCitationFormattingProtectedRanges(source),
+        ...findReferenceAttributeRanges(source),
+    ];
     for (const call of findTemplateCalls(source)) {
         if (
             !isCitationTemplate(call.name, templateNameContext) ||
@@ -975,22 +1009,25 @@ function getDefinitionUsePosition(
     tags: RefTag[],
     containers: ReferenceContainer[],
 ): number {
-    if (!isTagInContainers(definition.tag, containers)) {
-        return definition.tag.start;
-    }
+    const definitionPosition = isTagInContainers(definition.tag, containers)
+        ? Number.MAX_SAFE_INTEGER
+        : definition.tag.start;
     if (definition.oldName === "") {
-        return Number.MAX_SAFE_INTEGER;
+        return definitionPosition;
     }
     const isMatchingReuse = function isMatchingReuse(tag: RefTag) {
         const group = tag.attributes.group || "";
         const result =
             !isTagInContainers(tag, containers) &&
-            tag.attributes.name === definition.oldName &&
-            group === definition.group;
+            buildReferenceNameKey(group, tag.attributes.name ?? "") ===
+                buildReferenceNameKey(definition.group, definition.oldName);
         return result;
     };
     const reuse = tags.find(isMatchingReuse);
-    return reuse?.start ?? Number.MAX_SAFE_INTEGER;
+    return Math.min(
+        definitionPosition,
+        reuse?.start ?? Number.MAX_SAFE_INTEGER,
+    );
 }
 
 /**
@@ -1044,9 +1081,8 @@ function assignLinkedCitationNames(
         if (identity == null) {
             continue;
         }
-        definition.finalName = appendCitationLocator(
-            identity.baseName,
-            linked.locator,
+        definition.finalName = decodeReferenceAttribute(
+            appendCitationLocator(identity.baseName, linked.locator),
         );
     }
 }
@@ -1064,7 +1100,10 @@ function buildExplicitCitationRefMap(
     templateNameContext: TemplateNameContext,
 ): Map<string, CitationIdentity> {
     const result = new Map<string, CitationIdentity>();
-    const protectedRanges = findCitationFormattingProtectedRanges(source);
+    const protectedRanges = [
+        ...findCitationFormattingProtectedRanges(source),
+        ...findReferenceAttributeRanges(source),
+    ];
     for (const call of findTemplateCalls(source)) {
         if (isInWikitextRanges(call.start, protectedRanges)) {
             continue;
@@ -1143,7 +1182,7 @@ function assignFallbackNames(definitions: ReferenceDefinition[]): void {
     const reservedNames = new Set<string>();
     for (const definition of definitions) {
         if (definition.oldName !== "") {
-            reservedNames.add(definition.oldName);
+            reservedNames.add(decodeReferenceAttribute(definition.oldName));
         }
         if (definition.finalName !== "") {
             reservedNames.add(definition.finalName);
@@ -1159,7 +1198,9 @@ function assignFallbackNames(definitions: ReferenceDefinition[]): void {
                 return;
             }
             if (definition.oldName !== "") {
-                definition.finalName = definition.oldName;
+                definition.finalName = decodeReferenceAttribute(
+                    definition.oldName,
+                );
                 return;
             }
             let name: string;
@@ -1278,7 +1319,7 @@ function assignCitationNames(definitions: ReferenceDefinition[]): void {
     const baseGroups = Map.groupBy(
         citationDefinitions,
         function getBaseGroup(definition) {
-            return `${definition.group}\u0000${definition.identity?.baseName}`;
+            return `${decodeReferenceAttribute(definition.group)}\u0000${definition.identity?.baseName}`;
         },
     );
 
@@ -1328,9 +1369,8 @@ function assignSameSourceNames(
     for (const definition of definitions) {
         const identity = definition.identity as CitationIdentity;
         const locator = needsLocator ? identity.locator : "";
-        definition.finalName = appendCitationLocator(
-            `${identity.baseName}${suffix}`,
-            locator,
+        definition.finalName = decodeReferenceAttribute(
+            appendCitationLocator(`${identity.baseName}${suffix}`, locator),
         );
     }
 }
@@ -1372,6 +1412,93 @@ function alphabeticSuffix(index: number): string {
     return result;
 }
 
+/** Retains Cite's first-definition identity and diagnostics for named conflicts. */
+function preserveConflictingNamedDefinitions(
+    definitions: ReferenceDefinition[],
+    tags: RefTag[],
+    containers: ReferenceContainer[],
+): void {
+    const retainedContainers = findUnsafeAdditionalContainers(tags, containers);
+    const protectedKeys = new Set(
+        tags
+            .filter(
+                (tag) =>
+                    hasAdditionalReferenceAttributes(tag) ||
+                    isTagInContainers(tag, retainedContainers) ||
+                    (isTagInContainers(tag, containers) &&
+                        tag.attributes.details !== undefined),
+            )
+            .map((tag) =>
+                buildReferenceNameKey(
+                    isTagInContainers(tag, containers)
+                        ? getContainingGroup(tag, containers)
+                        : (tag.attributes.group ?? ""),
+                    tag.attributes.name ?? "",
+                ),
+            ),
+    );
+    const named = definitions.filter((definition) => definition.oldName !== "");
+    const groups = Map.groupBy(named, (definition) =>
+        buildReferenceNameKey(definition.group, definition.oldName),
+    );
+    for (const repeated of groups.values()) {
+        const contents = new Set(
+            repeated.map((definition) => definition.tag.content.trim()),
+        );
+        const protectedReference = protectedKeys.has(
+            buildReferenceNameKey(repeated[0].group, repeated[0].oldName),
+        );
+        if (contents.size < 2 && !protectedReference) continue;
+        for (const definition of repeated) {
+            definition.preserveInPlace = true;
+            definition.finalName = decodeReferenceAttribute(definition.oldName);
+            definition.formattedContent = definition.tag.content;
+            definition.formattingStatus = "unsupported";
+            definition.identity = undefined;
+            definition.parameterCollisions = 0;
+        }
+    }
+    for (const definition of definitions) {
+        if (
+            definition.oldName === "" &&
+            hasAdditionalReferenceAttributes(definition.tag)
+        ) {
+            definition.preserveInPlace = true;
+            definition.formattedContent = definition.tag.content;
+            definition.formattingStatus = "unsupported";
+            definition.identity = undefined;
+        }
+    }
+}
+
+function hasAdditionalReferenceAttributes(tag: RefTag): boolean {
+    return Object.keys(tag.attributes).some(
+        (name) => !["name", "group", "details"].includes(name),
+    );
+}
+
+/** Keeps diagnostics in additional same-group lists that cannot be merged safely. */
+function findUnsafeAdditionalContainers(
+    tags: RefTag[],
+    containers: ReferenceContainer[],
+): ReferenceContainer[] {
+    const seen = new Set<string>();
+    return containers.filter((container) => {
+        const group = decodeReferenceAttribute(container.group);
+        const additional = seen.has(group);
+        seen.add(group);
+        return (
+            additional &&
+            tags.some(
+                (tag) =>
+                    isTagInContainers(tag, [container]) &&
+                    (tag.attributes.details !== undefined ||
+                        hasAdditionalReferenceAttributes(tag)),
+            )
+        );
+    });
+}
+
 /**
  * Disambiguates equal names that have different content.
  *
@@ -1385,6 +1512,7 @@ function ensureUniqueReferenceNames(
     const seen = new Map<string, string>();
     const counters = new Map<string, number>();
     const isPreserved = (definition: ReferenceDefinition) =>
+        definition.preserveInPlace ||
         preservedRNames.has(
             buildReferenceNameKey(definition.group, definition.oldName),
         );
@@ -1392,7 +1520,11 @@ function ensureUniqueReferenceNames(
         (left, right) => Number(isPreserved(right)) - Number(isPreserved(left)),
     );
     for (const definition of ordered) {
-        const key = `${definition.group}\u0000${definition.finalName}`;
+        const key = getFinalReferenceNameKey(definition);
+        if (definition.preserveInPlace) {
+            seen.set(key, definition.formattedContent);
+            continue;
+        }
         const priorContent = seen.get(key);
         if (
             priorContent == null ||
@@ -1405,7 +1537,7 @@ function ensureUniqueReferenceNames(
         counters.set(key, next);
         definition.finalName = `${definition.finalName} ${next}`;
         seen.set(
-            `${definition.group}\u0000${definition.finalName}`,
+            getFinalReferenceNameKey(definition),
             definition.formattedContent,
         );
     }
@@ -1419,7 +1551,7 @@ function preserveUnconvertedRNames(
     for (const definition of definitions) {
         const key = buildReferenceNameKey(definition.group, definition.oldName);
         if (definition.oldName !== "" && preservedRNames.has(key)) {
-            definition.finalName = definition.oldName;
+            definition.finalName = decodeReferenceAttribute(definition.oldName);
         }
     }
 }
@@ -1436,10 +1568,11 @@ function buildOldNameMap(
     const result = new Map<string, string>();
     for (const definition of definitions) {
         if (definition.oldName !== "") {
-            result.set(
-                `${definition.group}\u0000${definition.oldName}`,
-                definition.finalName,
+            const key = buildReferenceNameKey(
+                definition.group,
+                definition.oldName,
             );
+            if (!result.has(key)) result.set(key, definition.finalName);
         }
     }
     return result;
@@ -1466,26 +1599,44 @@ function buildTagReplacements(
         },
     );
     const definitionsByStart = new Map(definitionEntries);
+    const preservedNames = new Set(
+        definitions
+            .filter((definition) => definition.preserveInPlace)
+            .map((definition) =>
+                buildReferenceNameKey(definition.group, definition.oldName),
+            ),
+    );
     const isBodyTag = function isBodyTag(tag: RefTag) {
         return !isTagInContainers(tag, containers);
     };
     const buildTagReplacement = function buildTagReplacement(tag: RefTag) {
         const group = tag.attributes.group || "";
+        const oldName = tag.attributes.name || "";
+        const key = buildReferenceNameKey(group, oldName);
         const definition = definitionsByStart.get(tag.start);
+        if (preservedNames.has(key) || hasAdditionalReferenceAttributes(tag)) {
+            return { end: tag.end, start: tag.start, text: tag.raw };
+        }
         if (definition != null) {
             const result = {
                 end: tag.end,
                 start: tag.start,
-                text: buildReuseTag(definition.finalName, group),
+                text: buildReuseTag(
+                    definition.finalName,
+                    group,
+                    tag.attributes.details,
+                ),
             };
             return result;
         }
-        const oldName = tag.attributes.name || "";
-        const name = oldNameMap.get(`${group}\u0000${oldName}`) || oldName;
+        const name = oldNameMap.get(key) || decodeReferenceAttribute(oldName);
         const result = {
             end: tag.end,
             start: tag.start,
-            text: name === "" ? tag.raw : buildReuseTag(name, group),
+            text:
+                name === ""
+                    ? tag.raw
+                    : buildReuseTag(name, group, tag.attributes.details),
         };
         return result;
     };
@@ -1503,17 +1654,33 @@ function buildTagReplacements(
 function buildContainerReplacements(
     containers: ReferenceContainer[],
     definitions: ReferenceDefinition[],
+    tags: RefTag[],
+    source: string,
 ): TextReplacement[] {
     const firstByGroup = new Set<string>();
+    const retainedContainers = findUnsafeAdditionalContainers(tags, containers);
     const buildContainerReplacement = function buildContainerReplacement(
         container: ReferenceContainer,
     ) {
-        const isFirst = !firstByGroup.has(container.group);
-        firstByGroup.add(container.group);
+        const group = decodeReferenceAttribute(container.group);
+        const isFirst = !firstByGroup.has(group);
+        firstByGroup.add(group);
+        if (retainedContainers.includes(container)) {
+            return {
+                end: container.end,
+                start: container.start,
+                text: source.slice(container.start, container.end),
+            };
+        }
         let text = "";
         if (isFirst) {
             const grouped = definitions.filter(function hasGroup(definition) {
-                return definition.group === container.group;
+                return (
+                    decodeReferenceAttribute(definition.group) === group &&
+                    !isTagInContainers(definition.tag, retainedContainers) &&
+                    (!definition.preserveInPlace ||
+                        isTagInContainers(definition.tag, containers))
+                );
             });
             const unique = uniqueDefinitions(grouped);
             text = buildReferenceContainer(container, unique);
@@ -1537,9 +1704,14 @@ function uniqueDefinitions(
     const isFirstDefinition = function isFirstDefinition(
         definition: ReferenceDefinition,
     ) {
-        const key = [definition.finalName, definition.formattedContent].join(
-            "\u0000",
-        );
+        const key = [
+            decodeReferenceAttribute(definition.group),
+            definition.finalName,
+            definition.formattedContent,
+            definition.listDefinedDetails === undefined
+                ? "absent"
+                : `present:${definition.listDefinedDetails}`,
+        ].join("\u0000");
         if (seen.has(key)) {
             return false;
         }
@@ -1718,8 +1890,13 @@ function isReferenceSectionComment(comment: string): boolean {
  * @returns Full ref tag.
  */
 function buildDefinitionTag(definition: ReferenceDefinition): string {
-    const name = escapeReferenceName(definition.finalName);
-    const tag = `<ref name="${name}">${definition.formattedContent}</ref>`;
+    const name = escapeReferenceDetails(definition.finalName);
+    const details = formatReferenceDetailsAttribute(
+        definition.listDefinedDetails,
+    );
+    const tag = definition.preserveInPlace
+        ? definition.tag.raw
+        : `<ref name="${name}"${details}>${definition.formattedContent}</ref>`;
     const trailing = stripReferenceSectionComments(definition.trailingText);
     return `${tag}${trailing}`.trimEnd();
 }
@@ -1731,9 +1908,10 @@ function buildDefinitionTag(definition: ReferenceDefinition): string {
  * @param group - Reference group.
  * @returns Self-closing ref tag.
  */
-function buildReuseTag(name: string, group: string): string {
+function buildReuseTag(name: string, group: string, details?: string): string {
     const groupAttribute = formatReferenceGroupAttribute(group);
-    return `<ref name="${escapeReferenceName(name)}"${groupAttribute} />`;
+    const detailsAttribute = formatReferenceDetailsAttribute(details);
+    return `<ref name="${escapeReferenceDetails(name)}"${groupAttribute}${detailsAttribute} />`;
 }
 
 /**
@@ -1751,17 +1929,17 @@ function appendMissingReferenceContainers(
 ): string {
     const containerGroups = containers.map(
         function getContainerGroup(container) {
-            return container.group;
+            return decodeReferenceAttribute(container.group);
         },
     );
     const existingGroups = new Set(containerGroups);
-    const definitionGroups = definitions.map(
-        function getDefinitionGroup(definition) {
-            return definition.group;
-        },
+    const definitionGroups = new Map(
+        definitions.map((definition) => [
+            decodeReferenceAttribute(definition.group),
+            definition.group,
+        ]),
     );
-    const uniqueDefinitionGroups = new Set(definitionGroups);
-    const allDefinitionGroups = Array.from(uniqueDefinitionGroups);
+    const allDefinitionGroups = Array.from(definitionGroups.keys());
     const isMissingGroup = function isMissingGroup(group: string) {
         return !existingGroups.has(group);
     };
@@ -1771,9 +1949,14 @@ function appendMissingReferenceContainers(
     }
     const buildMissingList = function buildMissingList(group: string) {
         const grouped = definitions.filter(function hasGroup(definition) {
-            return definition.group === group;
+            return (
+                decodeReferenceAttribute(definition.group) === group &&
+                !definition.preserveInPlace
+            );
         });
-        const container = createEmptyReferenceContainer(group);
+        const container = createEmptyReferenceContainer(
+            definitionGroups.get(group) ?? "",
+        );
         const unique = uniqueDefinitions(grouped);
         const result = buildReferenceContainer(container, unique);
         return result;
@@ -1819,7 +2002,10 @@ function findActiveRTemplates(
     text: string,
     templateNameContext: TemplateNameContext,
 ): ParsedTemplateCall[] {
-    const protectedRanges = findCitationFormattingProtectedRanges(text);
+    const protectedRanges = [
+        ...findCitationFormattingProtectedRanges(text),
+        ...findReferenceAttributeRanges(text),
+    ];
     const referenceRanges = findRefTags(text)
         .filter((tag) => !tag.selfClosing)
         .map((tag) => [tag.contentStart, tag.contentEnd] as const);
@@ -1865,7 +2051,10 @@ function findPreservedRReferenceNames(
     text: string,
     templateNameContext: TemplateNameContext,
 ): Set<string> {
-    const protectedRanges = findCitationFormattingProtectedRanges(text);
+    const protectedRanges = [
+        ...findCitationFormattingProtectedRanges(text),
+        ...findReferenceAttributeRanges(text),
+    ];
     const isUnprotectedR = function isUnprotectedR(call: ParsedTemplateCall) {
         return (
             normalizeTemplateName(call.name, templateNameContext) === "r" &&
@@ -1885,6 +2074,11 @@ function buildReferenceNameKey(group: string, name: string): string {
     const decodedGroup = decodeReferenceAttribute(group);
     const decodedName = decodeReferenceAttribute(name);
     return `${decodedGroup}\u0000${decodedName}`;
+}
+
+/** Matches decoded generated names without decoding literal entities twice. */
+function getFinalReferenceNameKey(definition: ReferenceDefinition): string {
+    return `${decodeReferenceAttribute(definition.group)}\u0000${definition.finalName}`;
 }
 
 /**

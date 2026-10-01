@@ -10,7 +10,10 @@
         use-close-button
         @update:open="onOpenChange"
     >
-        <div class="cf-source-manager__dialog-body-content">
+        <div
+            :ref="setSourceManagerContent"
+            class="cf-source-manager__dialog-body-content"
+        >
             <cdx-message
                 v-if="error"
                 type="error"
@@ -218,6 +221,213 @@
                         <p v-else-if="filteredExistingSources.length === 0">
                             {{ msg("lookup.noMatches") }}
                         </p>
+                        <div
+                            v-else-if="
+                                sourceTableGroups.some(
+                                    (group) => group.subReferences.length > 0,
+                                )
+                            "
+                            class="cf-source-manager__source-table cf-source-manager__source-groups cdx-table"
+                            role="table"
+                            :aria-label="msg('lookup.tableCaption')"
+                        >
+                            <div
+                                class="cf-source-manager__source-group-headings"
+                                role="row"
+                            >
+                                <div
+                                    v-for="column in sourceTableColumns"
+                                    :key="column.id"
+                                    role="columnheader"
+                                >
+                                    {{ column.label }}
+                                </div>
+                            </div>
+                            <div
+                                v-for="group in sourceTableGroups"
+                                :key="group.source.sourceId"
+                                class="cf-source-manager__source-group"
+                                role="rowgroup"
+                            >
+                                <div
+                                    class="cf-source-manager__source-group-main"
+                                    :class="{
+                                        'cf-source-manager__source-group-main--with-sub-references':
+                                            group.subReferences.length > 0,
+                                    }"
+                                    role="row"
+                                >
+                                    <div
+                                        class="cf-source-manager__source-reference"
+                                        role="rowheader"
+                                        :title="group.source.detailsTitle"
+                                    >
+                                        <span
+                                            class="cf-source-manager__source-reference-name"
+                                        >
+                                            {{ group.source.reference }}
+                                        </span>
+                                        <small
+                                            class="cf-source-manager__source-details"
+                                            :title="group.source.usageTitle"
+                                        >
+                                            {{ group.source.usageSummary }}
+                                        </small>
+                                    </div>
+                                    <div
+                                        class="cf-source-manager__source-title"
+                                        role="cell"
+                                        :lang="
+                                            group.source.titleLanguage ||
+                                            undefined
+                                        "
+                                        :title="group.source.source"
+                                    >
+                                        {{ group.source.source }}
+                                    </div>
+                                    <div role="cell">
+                                        <div
+                                            class="cf-source-manager__source-actions"
+                                        >
+                                            <cdx-button
+                                                action="progressive"
+                                                weight="quiet"
+                                                type="button"
+                                                :disabled="loading"
+                                                :aria-label="
+                                                    msg('lookup.useSource')
+                                                "
+                                                :title="
+                                                    canReuseListedSourceWithDetails(
+                                                        group.source.sourceId,
+                                                    )
+                                                        ? msg(
+                                                              'lookup.useSourceHint',
+                                                          )
+                                                        : msg(
+                                                              'lookup.useSource',
+                                                          )
+                                                "
+                                                @click="
+                                                    insertListedSource(
+                                                        group.source.sourceId,
+                                                        $event,
+                                                    )
+                                                "
+                                            >
+                                                <cdx-icon
+                                                    :icon="useSourceIcon"
+                                                />
+                                            </cdx-button>
+                                            <cdx-button
+                                                weight="quiet"
+                                                type="button"
+                                                :disabled="loading"
+                                                :aria-label="
+                                                    msg('lookup.editSource')
+                                                "
+                                                :title="
+                                                    msg('lookup.editSource')
+                                                "
+                                                @click="
+                                                    editListedSource(
+                                                        group.source.sourceId,
+                                                    )
+                                                "
+                                            >
+                                                <cdx-icon
+                                                    :icon="editSourceIcon"
+                                                />
+                                            </cdx-button>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div
+                                    v-for="subReference in group.subReferences"
+                                    :key="subReference.subReferenceId"
+                                    class="cf-source-manager__sub-reference-row"
+                                    role="row"
+                                >
+                                    <div role="rowheader">
+                                        <span
+                                            class="cf-source-manager__sub-reference-count"
+                                            :title="subReference.usageTitle"
+                                        >
+                                            {{ subReference.usageSummary }}
+                                        </span>
+                                        <span
+                                            class="cf-source-manager__visually-hidden"
+                                        >
+                                            {{ subReference.reference }}
+                                        </span>
+                                    </div>
+                                    <div
+                                        class="cf-source-manager__source-title cf-source-manager__sub-reference-details"
+                                        role="cell"
+                                        :title="subReference.usageTitle"
+                                    >
+                                        {{ subReference.source }}
+                                    </div>
+                                    <div role="cell">
+                                        <div
+                                            class="cf-source-manager__source-actions"
+                                        >
+                                            <cdx-button
+                                                action="progressive"
+                                                weight="quiet"
+                                                type="button"
+                                                :disabled="loading"
+                                                :aria-label="
+                                                    msg(
+                                                        'lookup.reuseSubReference',
+                                                    )
+                                                "
+                                                :title="
+                                                    msg(
+                                                        'lookup.reuseSubReference',
+                                                    )
+                                                "
+                                                @click="
+                                                    reuseListedSubReference(
+                                                        subReference.sourceId,
+                                                        subReference.subReferenceId,
+                                                    )
+                                                "
+                                            >
+                                                <cdx-icon
+                                                    :icon="useSourceIcon"
+                                                />
+                                            </cdx-button>
+                                            <cdx-button
+                                                weight="quiet"
+                                                type="button"
+                                                :disabled="loading"
+                                                :aria-label="
+                                                    msg(
+                                                        'lookup.editSubReference',
+                                                    )
+                                                "
+                                                :title="
+                                                    msg(
+                                                        'lookup.editSubReference',
+                                                    )
+                                                "
+                                                @click="
+                                                    editListedSubReference(
+                                                        subReference.sourceId,
+                                                        subReference.subReferenceId,
+                                                    )
+                                                "
+                                            >
+                                                <cdx-icon
+                                                    :icon="editSourceIcon"
+                                                />
+                                            </cdx-button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
                         <cdx-table
                             v-else
                             :key="sourceTablePaginationKey"
@@ -227,7 +437,12 @@
                             :use-row-headers="true"
                             :columns="sourceTableColumns"
                             :data="sourceTableRows"
-                            :paginate="sourceTableRows.length > 100"
+                            :paginate="
+                                sourceTableRows.length > 100 &&
+                                sourceTableRows.every(
+                                    (row) => row.subReferenceId === '',
+                                )
+                            "
                             :pagination-size-default="100"
                             :pagination-size-options="[
                                 { value: 10 },
@@ -237,54 +452,91 @@
                             ]"
                         >
                             <template #item-reference="{ item, row }">
+                                <span
+                                    v-if="row.subReferenceId"
+                                    class="cf-source-manager__visually-hidden"
+                                >
+                                    {{ item }}
+                                </span>
                                 <div
+                                    v-else
                                     class="cf-source-manager__source-reference"
                                 >
                                     <span
                                         class="cf-source-manager__source-reference-name"
-                                        :title="item"
+                                        :title="row.detailsTitle"
                                     >
                                         {{ item }}
                                     </span>
                                     <small
                                         class="cf-source-manager__source-details"
-                                        :title="row.detailsTitle"
+                                        :title="row.usageTitle"
                                     >
-                                        <code>{{ row.details }}</code>
-                                        <template v-if="row.group">
-                                            ·
-                                            {{
-                                                msg("lookup.group", {
-                                                    group: row.group,
-                                                })
-                                            }}
-                                        </template>
-                                        ·
-                                        <span :title="row.usageTitle">
-                                            {{ row.usageCount }}×
-                                        </span>
+                                        {{ row.usageSummary }}
                                     </small>
                                 </div>
                             </template>
                             <template #item-source="{ item, row }">
                                 <span
                                     class="cf-source-manager__source-title"
+                                    :class="{
+                                        'cf-source-manager__sub-reference-details':
+                                            row.subReferenceId !== '',
+                                    }"
                                     :lang="row.titleLanguage || undefined"
-                                    :title="item"
+                                    :title="
+                                        row.subReferenceId
+                                            ? row.usageTitle
+                                            : item
+                                    "
                                 >
-                                    {{ item }}
+                                    <template v-if="row.subReferenceId">
+                                        ({{ item }})
+                                    </template>
+                                    <template v-else>{{ item }}</template>
                                 </span>
                             </template>
                             <template #item-actions="{ row }">
                                 <div class="cf-source-manager__source-actions">
                                     <cdx-button
+                                        v-if="!row.subReferenceId"
                                         action="progressive"
                                         weight="quiet"
                                         type="button"
                                         :disabled="loading"
                                         :aria-label="msg('lookup.useSource')"
-                                        :title="msg('lookup.useSource')"
-                                        @click="insertListedSource(row.id)"
+                                        :title="
+                                            canReuseListedSourceWithDetails(
+                                                row.sourceId,
+                                            )
+                                                ? msg('lookup.useSourceHint')
+                                                : msg('lookup.useSource')
+                                        "
+                                        @click="
+                                            insertListedSource(
+                                                row.sourceId,
+                                                $event,
+                                            )
+                                        "
+                                    >
+                                        <cdx-icon :icon="useSourceIcon" />
+                                    </cdx-button>
+                                    <cdx-button
+                                        v-else
+                                        action="progressive"
+                                        weight="quiet"
+                                        type="button"
+                                        :disabled="loading"
+                                        :aria-label="
+                                            msg('lookup.reuseSubReference')
+                                        "
+                                        :title="msg('lookup.reuseSubReference')"
+                                        @click="
+                                            reuseListedSubReference(
+                                                row.sourceId,
+                                                row.subReferenceId,
+                                            )
+                                        "
                                     >
                                         <cdx-icon :icon="useSourceIcon" />
                                     </cdx-button>
@@ -292,9 +544,24 @@
                                         weight="quiet"
                                         type="button"
                                         :disabled="loading"
-                                        :aria-label="msg('lookup.editSource')"
-                                        :title="msg('lookup.editSource')"
-                                        @click="editListedSource(row.id)"
+                                        :aria-label="
+                                            row.subReferenceId
+                                                ? msg('lookup.editSubReference')
+                                                : msg('lookup.editSource')
+                                        "
+                                        :title="
+                                            row.subReferenceId
+                                                ? msg('lookup.editSubReference')
+                                                : msg('lookup.editSource')
+                                        "
+                                        @click="
+                                            row.subReferenceId
+                                                ? editListedSubReference(
+                                                      row.sourceId,
+                                                      row.subReferenceId,
+                                                  )
+                                                : editListedSource(row.sourceId)
+                                        "
                                     >
                                         <cdx-icon :icon="editSourceIcon" />
                                     </cdx-button>
@@ -418,6 +685,88 @@
                         {{ msg("tool.formatCitations") }}
                     </cdx-button>
                 </div>
+            </div>
+        </template>
+    </cdx-dialog>
+    <cdx-dialog
+        v-model:open="referenceReuseDialogOpen"
+        class="cf-source-manager__reference-reuse-dialog"
+        :title="
+            referenceReuseSubReference
+                ? msg('lookup.editSubReference')
+                : msg('lookup.useWithDetails')
+        "
+        :lang="interfaceLocale"
+        :close-button-label="msg('common.cancel')"
+        use-close-button
+        @update:open="onReferenceReuseDialogOpenChange"
+    >
+        <div class="cf-source-manager__dialog-body-content">
+            <cdx-message v-if="referenceReuseError" type="error">
+                {{ referenceReuseError }}
+            </cdx-message>
+            <p class="cf-source-manager__reference-reuse-name">
+                {{ referenceReuseSource?.referenceName }}
+                <small v-if="referenceReuseSource?.group">
+                    {{
+                        msg("lookup.group", {
+                            group: referenceReuseSource.group,
+                        })
+                    }}
+                </small>
+            </p>
+            <cdx-field>
+                <template #label>
+                    {{ msg("lookup.referenceDetails") }}
+                </template>
+                <template #description>
+                    {{ msg("lookup.referenceDetailsDescription") }}
+                </template>
+                <cdx-text-area
+                    v-model="referenceReuseDetails"
+                    :autosize="true"
+                    rows="2"
+                    :disabled="loading"
+                    :aria-label="msg('lookup.referenceDetails')"
+                    autofocus
+                />
+            </cdx-field>
+            <p v-if="referenceReuseSubReferences.length > 1">
+                {{
+                    msg("lookup.editSubReferenceUses", {
+                        count: referenceReuseSubReferences.length,
+                    })
+                }}
+            </p>
+            <section class="cf-source-manager__reference-reuse-preview">
+                <h3 class="cf-source-manager__section-heading">
+                    {{ msg("lookup.referencePreview") }}
+                </h3>
+                <code>{{ getReferenceReusePreview() }}</code>
+            </section>
+        </div>
+        <template #footer>
+            <div class="cf-source-manager__reference-reuse-actions">
+                <cdx-button
+                    weight="quiet"
+                    type="button"
+                    @click="closeReferenceReuseDialog"
+                >
+                    {{ msg("common.cancel") }}
+                </cdx-button>
+                <cdx-button
+                    action="progressive"
+                    weight="primary"
+                    type="button"
+                    :disabled="loading || referenceReuseSource == null"
+                    @click="insertReferenceWithDetails"
+                >
+                    {{
+                        referenceReuseSubReference
+                            ? msg("common.saveChanges")
+                            : msg("lookup.useSource")
+                    }}
+                </cdx-button>
             </div>
         </template>
     </cdx-dialog>

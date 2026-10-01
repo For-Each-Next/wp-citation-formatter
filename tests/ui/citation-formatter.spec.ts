@@ -111,6 +111,449 @@ test("filters sources and reuses a reference at the preserved cursor", async ({
     expect(errors).toEqual([]);
 });
 
+test("cancels and safely inserts grouped reference details without duplicating the source", async ({
+    page,
+}) => {
+    const source = [
+        'Lead.<ref name="Book" group="note" details="p. 23" />',
+        '<references group="note"><ref name="Book">{{Cite book|last=Smith|year=2020|title=Example book}}</ref></references>',
+    ].join("\n");
+    const errors = await mountGadget(page, { source });
+    const main = page.getByRole("dialog", {
+        name: "Citation formatter",
+        exact: true,
+    });
+    await main.getByRole("tab", { name: "Tools", exact: true }).click();
+    await main
+        .getByRole("checkbox", {
+            name: "Use {{r}} instead of <ref> when possible",
+            exact: true,
+        })
+        .check();
+    await main
+        .getByRole("tab", { name: "View sources (1)", exact: true })
+        .click();
+    await expect(main.getByRole("row")).toHaveCount(3);
+    const openDetails = main.getByRole("button", {
+        name: "Use source",
+        exact: true,
+    });
+    // macOS reserves Control-click for the context menu; dispatch the Windows gesture.
+    await openDetails.dispatchEvent("click", { ctrlKey: true });
+    const reuse = page.getByRole("dialog", {
+        name: "Use with details",
+        exact: true,
+    });
+    const field = reuse.getByRole("textbox", {
+        name: "Reference details (page, quote, …)",
+        exact: true,
+    });
+    await expect(field).toHaveValue("");
+    const details =
+        'p. "23" & <img src=x onerror="window.injected=true"> {{lang|en|chapter 2}}';
+    const reference =
+        '<ref name="Book" group="note" details="p. &quot;23&quot; &amp; &lt;img src=x onerror=&quot;window.injected=true&quot;&gt; {{lang|en|chapter 2}}" />';
+    await field.fill(details);
+    await expect(reuse.locator("code")).toHaveText(reference);
+    await expect(reuse.locator("img")).toHaveCount(0);
+    const cancel = reuse
+        .locator(".cf-source-manager__reference-reuse-actions")
+        .getByRole("button", { name: "Cancel", exact: true });
+    const use = reuse.getByRole("button", { name: "Use source", exact: true });
+    expect((await cancel.boundingBox())!.x).toBeLessThan(
+        (await use.boundingBox())!.x,
+    );
+    await cancel.click();
+    await expect(reuse).not.toBeVisible();
+    await expect(page.locator("#wpTextbox1")).toHaveValue(source);
+
+    await openDetails.click({ modifiers: ["Meta"] });
+    await expect(field).toHaveValue("");
+    await field.fill(details);
+    await use.click();
+    await expect(page.getByRole("dialog")).toHaveCount(0);
+    await expect(page.locator("#wpTextbox1")).toHaveValue(source + reference);
+    expect(await page.evaluate(() => (window as any).injected)).toBeUndefined();
+    expect(errors).toEqual([]);
+});
+
+test("starts new inline sub-reference details blank and uses the parent when cleared", async ({
+    page,
+}) => {
+    const source =
+        'Lead.<ref name="Book" details="{{lang|en|p. 23}}">{{Cite book|last=Smith|year=2020|title=Example book}}</ref>';
+    const errors = await mountGadget(page, { source });
+    const main = page.getByRole("dialog", {
+        name: "Citation formatter",
+        exact: true,
+    });
+    await main.getByRole("tab", { name: "Tools", exact: true }).click();
+    await main
+        .getByRole("checkbox", {
+            name: "Use {{r}} instead of <ref> when possible",
+            exact: true,
+        })
+        .check();
+    await main
+        .getByRole("tab", { name: "View sources (1)", exact: true })
+        .click();
+    await main
+        .getByRole("button", { name: "Use source", exact: true })
+        .dispatchEvent("click", { ctrlKey: true });
+    const reuse = page.getByRole("dialog", {
+        name: "Use with details",
+        exact: true,
+    });
+    const field = reuse.getByRole("textbox", {
+        name: "Reference details (page, quote, …)",
+        exact: true,
+    });
+    await expect(field).toHaveValue("");
+    await field.fill("{{lang|en|p. 24}}");
+    await expect(reuse.locator("code")).toHaveText(
+        '<ref name="Book" details="{{lang|en|p. 24}}" />',
+    );
+    await field.fill("");
+    await expect(reuse.locator("code")).toHaveText("{{r|Book}}");
+    await reuse
+        .getByRole("button", { name: "Use source", exact: true })
+        .click();
+    await expect(page.locator("#wpTextbox1")).toHaveValue(
+        source + "{{r|Book}}",
+    );
+    expect(errors).toEqual([]);
+});
+
+test("offers reference details only for named native sources and refuses removed parents", async ({
+    page,
+}) => {
+    const source =
+        '<ref>{{Cite web|title=Anonymous}}</ref><ref name="Book">{{Cite book|title=Example book}}</ref>';
+    const errors = await mountGadget(page, { source });
+    const main = page.getByRole("dialog", {
+        name: "Citation formatter",
+        exact: true,
+    });
+    await main
+        .getByRole("tab", { name: "View sources (2)", exact: true })
+        .click();
+    const anonymous = main
+        .getByRole("row")
+        .filter({ hasText: "Anonymous" })
+        .getByRole("button", { name: "Use source", exact: true });
+    await expect(anonymous).toHaveAttribute("title", "Use source");
+    const action = main
+        .getByRole("row")
+        .filter({ hasText: "Example book" })
+        .getByRole("button", {
+            name: "Use source",
+            exact: true,
+        });
+    await expect(action).toHaveAttribute(
+        "title",
+        /Ctrl.*Command|Command.*Ctrl/,
+    );
+    await action.dispatchEvent("click", { ctrlKey: true });
+    const reuse = page.getByRole("dialog", {
+        name: "Use with details",
+        exact: true,
+    });
+    await reuse
+        .getByRole("textbox", {
+            name: "Reference details (page, quote, …)",
+            exact: true,
+        })
+        .fill("p. 23");
+    await page.locator("#wpTextbox1").evaluate((element) => {
+        (element as HTMLTextAreaElement).value = "Parent removed.";
+    });
+    await reuse
+        .getByRole("button", { name: "Use source", exact: true })
+        .click();
+    await expect(reuse).toContainText("The selected citation is unavailable.");
+    await expect(page.locator("#wpTextbox1")).toHaveValue("Parent removed.");
+    expect(errors).toEqual([]);
+});
+
+test("merges identical sub-reference details beneath a source and edits or reuses the group", async ({
+    page,
+}) => {
+    const safeDetails =
+        '<img src=x onerror="window.injected=true"> {{lang|en|p. 24}}';
+    const source = [
+        'Lead.<ref name="Book" details="p. 23" dir="ltr" />',
+        "Repeat.<ref details='p.&#32;23' name='Book' data-note='keep' />",
+        'Safety.<ref name="Book" details="&lt;img src=x onerror=&quot;window.injected=true&quot;&gt; {{lang|en|p. 24}}" />',
+        '<ref name="Book">{{Cite book|last=Smith|year=2020|title=Example book}}</ref>',
+        '<ref name="Second">{{Cite book|last=Jones|year=2021|title=Second book}}</ref>',
+    ].join("\n");
+    const errors = await mountGadget(page, { source });
+    const main = page.getByRole("dialog", {
+        name: "Citation formatter",
+        exact: true,
+    });
+    await main
+        .getByRole("tab", { name: "View sources (2)", exact: true })
+        .click();
+    const rows = main.getByRole("row");
+    await expect(rows).toHaveCount(5);
+    await expect(rows.nth(1).getByRole("rowheader")).toContainText("Smith");
+    await expect(rows.nth(1).getByRole("rowheader")).toContainText("2020");
+    await expect(rows.nth(1).getByRole("rowheader")).toContainText(
+        "4× (with 3 sub-refs)",
+    );
+    await expect(rows.nth(1).getByRole("cell").first()).toHaveText(
+        "Example book",
+    );
+    await expect(rows.nth(2).getByRole("cell").first()).toContainText("p. 23");
+    await expect(rows.nth(2).getByRole("rowheader")).toContainText("2×");
+    await expect(rows.nth(3).getByRole("cell").first()).toContainText(
+        safeDetails,
+    );
+    await expect(rows.nth(3).getByRole("rowheader")).toContainText("1×");
+    await expect(rows.nth(4).getByRole("cell").first()).toHaveText(
+        "Second book",
+    );
+    await expect(main.locator("img")).toHaveCount(0);
+    await expect(
+        main.getByRole("button", { name: "Use source", exact: true }),
+    ).toHaveCount(2);
+    await expect(
+        main.getByRole("button", { name: "Reuse sub-reference", exact: true }),
+    ).toHaveCount(2);
+    await expect(
+        main.getByRole("button", { name: "Edit sub-reference", exact: true }),
+    ).toHaveCount(2);
+
+    const editGroupedDetails = rows.nth(2).getByRole("button", {
+        name: "Edit sub-reference",
+        exact: true,
+    });
+    await editGroupedDetails.click();
+    const edit = page.getByRole("dialog", {
+        name: "Edit sub-reference",
+        exact: true,
+    });
+    await expect(edit).toContainText(
+        "Changes apply to all 2 uses of these details.",
+    );
+    const field = edit.getByRole("textbox", {
+        name: "Reference details (page, quote, …)",
+        exact: true,
+    });
+    await expect(field).toHaveValue("p. 23");
+    await field.fill("p. 99");
+    await edit
+        .locator(".cf-source-manager__reference-reuse-actions")
+        .getByRole("button", { name: "Cancel", exact: true })
+        .click();
+    await expect(edit).not.toBeVisible();
+    await expect(main).toBeVisible();
+    await expect(page.locator("#wpTextbox1")).toHaveValue(source);
+
+    await editGroupedDetails.click();
+    await expect(field).toHaveValue("p. 23");
+    await field.fill("p. 99");
+    await edit
+        .getByRole("button", { name: "Save changes", exact: true })
+        .click();
+    const updated = source
+        .replace('details="p. 23"', 'details="p. 99"')
+        .replace("details='p.&#32;23'", 'details="p. 99"');
+    await expect(edit).not.toBeVisible();
+    await expect(main).toBeVisible();
+    await expect(page.locator("#wpTextbox1")).toHaveValue(updated);
+    await expect(rows.nth(2).getByRole("cell").first()).toContainText("p. 99");
+    await expect(rows.nth(2).getByRole("rowheader")).toContainText("2×");
+    await expect(rows.nth(3).getByRole("cell").first()).toContainText(
+        safeDetails,
+    );
+
+    await page.setViewportSize({ width: 390, height: 844 });
+    for (const name of ["Reuse sub-reference", "Edit sub-reference"]) {
+        const action = rows.nth(2).getByRole("button", { name, exact: true });
+        await expect(action).toBeVisible();
+        const bounds = (await action.boundingBox())!;
+        expect(bounds.x).toBeGreaterThanOrEqual(0);
+        expect(bounds.x + bounds.width).toBeLessThanOrEqual(390);
+    }
+    expect(
+        await page.evaluate(() => document.documentElement.scrollWidth),
+    ).toBeLessThanOrEqual(390);
+    await rows
+        .nth(2)
+        .getByRole("button", { name: "Reuse sub-reference", exact: true })
+        .click();
+    await expect(page.getByRole("dialog")).toHaveCount(0);
+    await expect(page.locator("#wpTextbox1")).toHaveValue(
+        updated + '<ref name="Book" details="p. 99" />',
+    );
+
+    await page.locator("#citation-formatter-quick-launch").click();
+    await main
+        .getByRole("tab", { name: "View sources (2)", exact: true })
+        .click();
+    await expect(main.getByRole("row")).toHaveCount(5);
+    await expect(
+        main.getByRole("row").nth(2).getByRole("rowheader"),
+    ).toContainText("3×");
+    await expect(
+        main.getByRole("row").nth(1).getByRole("rowheader"),
+    ).toContainText("5× (with 4 sub-refs)");
+    await expect(
+        main.getByRole("button", { name: "Reuse sub-reference", exact: true }),
+    ).toHaveCount(2);
+    await expect(main.locator("img")).toHaveCount(0);
+    expect(await page.evaluate(() => (window as any).injected)).toBeUndefined();
+    expect(errors).toEqual([]);
+});
+
+for (const viewport of [
+    { width: 1280, height: 720 },
+    { width: 390, height: 844 },
+]) {
+    test(`keeps a source frozen above its dotted sub-reference rows until the next source (${viewport.width}px)`, async ({
+        page,
+    }) => {
+        const source = [
+            '<ref name="Book">{{Cite book|last=Smith|year=2020|title=Example book}}</ref>',
+            ...Array.from(
+                { length: 24 },
+                (_, index) =>
+                    `Detail.<ref name="Book" details="p. ${index + 1}" />`,
+            ),
+            '<ref name="Second">{{Cite book|last=Jones|year=2021|title=Second book}}</ref>',
+            ...Array.from(
+                { length: 20 },
+                (_, index) =>
+                    `Next detail.<ref name="Second" details="p. ${index + 1}" />`,
+            ),
+            '<ref name="Last">{{Cite book|last=Nguyen|year=2022|title=Last book}}</ref>',
+        ].join("\n");
+        await page.setViewportSize(viewport);
+        const errors = await mountGadget(page, { source });
+        const main = page.getByRole("dialog");
+        await main
+            .getByRole("tab", { name: "View sources (3)", exact: true })
+            .click();
+        const groups = main.locator(".cf-source-manager__source-group");
+        await expect(groups).toHaveCount(3);
+        const firstParent = groups
+            .nth(0)
+            .locator(".cf-source-manager__source-group-main");
+        const secondParent = groups
+            .nth(1)
+            .locator(".cf-source-manager__source-group-main");
+        const firstChildren = groups
+            .nth(0)
+            .locator(".cf-source-manager__sub-reference-row");
+        await expect(firstChildren).toHaveCount(24);
+        await expect(
+            firstChildren.nth(0).getByRole("cell").first(),
+        ).toContainText("p. 1");
+        await expect(
+            firstChildren.nth(23).getByRole("cell").first(),
+        ).toContainText("p. 24");
+        await expect(firstParent.getByRole("rowheader")).toContainText(
+            "25× (with 24 sub-refs)",
+        );
+        const separatorStyles = await groups.nth(0).evaluate((group) => {
+            const child = group.querySelector(
+                ".cf-source-manager__sub-reference-row [role=cell]",
+            )!;
+            return {
+                source: getComputedStyle(group).borderTopStyle,
+                details: getComputedStyle(child).borderTopStyle,
+            };
+        });
+        expect(separatorStyles).toEqual({ source: "solid", details: "dotted" });
+
+        const body = main.locator(".cdx-dialog__body");
+        const tabs = main.getByRole("tablist");
+        await body.evaluate((element) => {
+            const group = element.querySelector(
+                ".cf-source-manager__source-group",
+            )!;
+            const header = element.querySelector(".cdx-tabs__header")!;
+            element.scrollTop +=
+                group.getBoundingClientRect().top -
+                header.getBoundingClientRect().bottom +
+                180;
+        });
+        await expect(firstParent).toBeInViewport();
+        const pinnedBefore = (await firstParent.boundingBox())!;
+        const childBefore = (await firstChildren.nth(12).boundingBox())!;
+        const tabsBefore = (await tabs.boundingBox())!;
+        expect(pinnedBefore.y).toBeCloseTo(tabsBefore.y + tabsBefore.height, 0);
+        await body.evaluate((element) => {
+            element.scrollTop += 160;
+        });
+        const pinnedAfter = (await firstParent.boundingBox())!;
+        const childAfter = (await firstChildren.nth(12).boundingBox())!;
+        expect(pinnedAfter.y).toBeCloseTo(pinnedBefore.y, 0);
+        expect(childBefore.y - childAfter.y).toBeCloseTo(160, 0);
+        const background = await firstParent.evaluate(
+            (element) => getComputedStyle(element).backgroundColor,
+        );
+        expect(background).not.toBe("rgba(0, 0, 0, 0)");
+        for (const name of ["Use source", "Edit source"]) {
+            const action = firstParent.getByRole("button", {
+                name,
+                exact: true,
+            });
+            await expect(action).toBeInViewport();
+            const bounds = (await action.boundingBox())!;
+            expect(bounds.x).toBeGreaterThanOrEqual(0);
+            expect(bounds.x + bounds.width).toBeLessThanOrEqual(viewport.width);
+        }
+
+        await body.evaluate((element) => {
+            const nextGroup = element.querySelectorAll(
+                ".cf-source-manager__source-group",
+            )[1]!;
+            const header = element.querySelector(".cdx-tabs__header")!;
+            element.scrollTop +=
+                nextGroup.getBoundingClientRect().top -
+                header.getBoundingClientRect().bottom +
+                180;
+        });
+        await expect(secondParent).toBeInViewport();
+        const nextPinned = (await secondParent.boundingBox())!;
+        const released = (await firstParent.boundingBox())!;
+        const tabsAfter = (await tabs.boundingBox())!;
+        expect(nextPinned.y).toBeCloseTo(tabsAfter.y + tabsAfter.height, 0);
+        expect(released.y + released.height).toBeLessThanOrEqual(nextPinned.y);
+        await expect(secondParent.getByRole("rowheader")).toContainText(
+            "21× (with 20 sub-refs)",
+        );
+        expect(
+            await page.evaluate(() => document.documentElement.scrollWidth),
+        ).toBeLessThanOrEqual(viewport.width);
+        await expect(page.locator("#wpTextbox1")).toHaveValue(source);
+        expect(errors).toEqual([]);
+    });
+}
+
+test("reuses inline sub-reference details as a fresh call without repeating the source", async ({
+    page,
+}) => {
+    const source =
+        'Lead.<ref name="Book" details="{{lang|en|p. 23}}">{{Cite book|last=Smith|year=2020|title=Example book}}</ref>';
+    const errors = await mountGadget(page, { source });
+    const main = page.getByRole("dialog");
+    await main
+        .getByRole("tab", { name: "View sources (1)", exact: true })
+        .click();
+    await expect(main.getByRole("row")).toHaveCount(3);
+    await main
+        .getByRole("button", { name: "Reuse sub-reference", exact: true })
+        .click();
+    await expect(page.locator("#wpTextbox1")).toHaveValue(
+        source + '<ref name="Book" details="{{lang|en|p. 23}}" />',
+    );
+    expect(errors).toEqual([]);
+});
+
 test("keeps source tabs visible while scrolling and gives titles compact accessible actions", async ({
     page,
 }) => {
@@ -136,7 +579,10 @@ test("keeps source tabs visible while scrolling and gives titles compact accessi
         const firstRow = dialog.getByRole("row").nth(1);
         for (const name of ["Use source", "Edit source"]) {
             const action = firstRow.getByRole("button", { name, exact: true });
-            await expect(action).toHaveAttribute("title", name);
+            await expect(action).toHaveAttribute(
+                "title",
+                name === "Use source" ? /Ctrl.*Command|Command.*Ctrl/ : name,
+            );
             await expect(action.locator("svg")).toHaveCount(1);
             expect(await action.textContent()).toMatch(/^\s*$/);
             expect((await action.boundingBox())!.width).toBeLessThanOrEqual(40);
@@ -319,11 +765,18 @@ for (const { locale, resolvedLocale, catalog } of [
         test(`uses Chinese interface messages for ${locale} (${artifact}, ${delayMediaWiki ? "delayed" : "ready"} MediaWiki)`, async ({
             page,
         }) => {
+            const source = [
+                initialSource,
+                '<ref name="sample" details="p. 23" />',
+                '<ref name="sample" details="p. 23" />',
+                '<ref name="sample" details="p. 24" />',
+            ].join("\n");
             const errors = await mountGadget(page, {
                 artifact,
                 delayMediaWiki,
                 locale,
                 open: false,
+                source,
             });
             const launcher = page.locator("#citation-formatter-quick-launch");
             await expect(launcher).toHaveText(catalog["tool.quickLaunch"]);
@@ -363,10 +816,25 @@ for (const { locale, resolvedLocale, catalog } of [
             });
             await viewTab.click();
             await expect(dialog.getByRole("columnheader")).toHaveText([
-                catalog["lookup.reference"],
+                catalog["lookup.authorYear"],
                 catalog["lookup.sourceColumn"],
                 catalog["lookup.actions"],
             ]);
+            await expect(dialog.getByRole("rowheader").first()).toContainText(
+                catalog["lookup.sourceUsageWithSubReferences"]
+                    .replace("{count}", "4")
+                    .replace("{subCount}", "3"),
+            );
+            const subReferences = dialog.locator(
+                ".cf-source-manager__sub-reference-row",
+            );
+            await expect(subReferences).toHaveCount(2);
+            await expect(
+                subReferences.nth(0).getByRole("rowheader"),
+            ).toContainText("2×");
+            await expect(
+                subReferences.nth(0).getByRole("cell").first(),
+            ).toContainText("p. 23");
             await dialog
                 .getByRole("tab", {
                     name: catalog["tabs.tools"],
@@ -414,9 +882,7 @@ for (const { locale, resolvedLocale, catalog } of [
                     exact: true,
                 }),
             ).toBeVisible();
-            await expect(page.locator("#wpTextbox1")).toHaveValue(
-                initialSource,
-            );
+            await expect(page.locator("#wpTextbox1")).toHaveValue(source);
             expect(errors).toEqual([]);
         });
     }
@@ -514,6 +980,78 @@ test("captures the source and tools panels for visual review", async ({
             animations: "disabled",
         });
     expect(errors).toEqual([]);
+
+    const detailsPage = await page.context().newPage();
+    try {
+        await detailsPage.setViewportSize({ width: 1280, height: 720 });
+        const detailsErrors = await mountGadget(detailsPage, {
+            source: await readFile(
+                `${root}tests/fixtures/mother3-sub-references.wikitext`,
+                "utf8",
+            ),
+            locale: "zh",
+            direction: "ltr",
+            wikiId: "zhwiki",
+            pageName: "地球冒险3",
+        });
+        const detailsMain = detailsPage.getByRole("dialog");
+        await detailsMain
+            .getByRole("tab", {
+                name: zhHansCatalog["tabs.viewSources"].split("{count}")[0],
+            })
+            .click();
+        async function showSourceTable(): Promise<void> {
+            await detailsMain.locator(".cdx-dialog__body").evaluate((body) => {
+                const table = body.querySelector(
+                    ".cf-source-manager__source-table",
+                )!;
+                const tabs = body.querySelector(".cdx-tabs__header")!;
+                body.scrollTop +=
+                    table.getBoundingClientRect().top -
+                    tabs.getBoundingClientRect().bottom;
+            });
+        }
+        await showSourceTable();
+        await detailsMain.screenshot({
+            path: `${root}docs/images/sub-reference-sources.png`,
+            animations: "disabled",
+        });
+        await detailsPage.setViewportSize({ width: 390, height: 844 });
+        const detailsFilter = detailsMain.getByPlaceholder(
+            zhHansCatalog["lookup.filterKeywordPlaceholder"],
+        );
+        await detailsFilter.fill("Hobonichi2006");
+        await showSourceTable();
+        await detailsMain.screenshot({
+            path: `${root}docs/images/sub-reference-sources-mobile.png`,
+            animations: "disabled",
+        });
+        await detailsPage.setViewportSize({ width: 1280, height: 720 });
+        await detailsFilter.fill("");
+        await detailsMain
+            .getByRole("button", {
+                name: zhHansCatalog["lookup.useSource"],
+                exact: true,
+            })
+            .nth(1)
+            .click({ modifiers: ["ControlOrMeta"] });
+        const detailsDialog = detailsPage.getByRole("dialog", {
+            name: zhHansCatalog["lookup.useWithDetails"],
+            exact: true,
+        });
+        await detailsDialog.screenshot({
+            path: `${root}docs/images/reference-details.png`,
+            animations: "disabled",
+        });
+        await detailsPage.setViewportSize({ width: 390, height: 844 });
+        await detailsDialog.screenshot({
+            path: `${root}docs/images/reference-details-mobile.png`,
+            animations: "disabled",
+        });
+        expect(detailsErrors).toEqual([]);
+    } finally {
+        await detailsPage.close();
+    }
 });
 
 async function mountGadget(

@@ -16,6 +16,111 @@ const englishTemplateNames = createTemplateNameContext("enwiki");
 const chineseTemplateNames = createTemplateNameContext("zhwiki");
 const leadReferenceMarker = /<references responsive>\n\n<!-- -+ § 0 {4}Lead/u;
 
+test("renames reference links when an HTML5 named entity aliases a Unicode name", () => {
+    const source = [
+        '<ref name="é" />',
+        '<ref name="&eacute;" details="p. 23">{{cite book|author=Ma|year=2020|title=Book}}</ref>',
+        '<ref name="Good">{{cite web|title=Other}}</ref>',
+        "{{r|Good}}",
+        "<references />",
+    ].join("\n");
+
+    for (const layout of ["inline", "block"] as const) {
+        const result = formatCitationWikitext(source, templateData, layout);
+        assert.match(result.text, /<ref name="Ma, 2020" \/>/u);
+        assert.match(result.text, /<ref name="Ma, 2020" details="p. 23" \/>/u);
+        assert.match(result.text, /<ref name="Ma, 2020">/u);
+        assert.doesNotMatch(result.text, /name="(?:é|&eacute;)"/u);
+        assert.equal(result.citationsFormatted, 2);
+        assert.equal(
+            formatCitationWikitext(result.text, templateData, layout).text,
+            result.text,
+        );
+    }
+});
+
+test("matches HTML5 named entities in reference-list groups", () => {
+    for (const list of [
+        '<references group="&eacute;"><ref name="Book">{{cite book|author=Ma|year=2020|title=Book}}</ref></references>',
+        '{{Reflist|group=&eacute;|refs=<ref name="Book">{{cite book|author=Ma|year=2020|title=Book}}</ref>}}',
+    ]) {
+        const source = '<ref name="Book" group="é" details="p. 23" />\n' + list;
+        const result = formatCitationWikitext(source, templateData);
+        assert.match(
+            result.text,
+            /<ref name="Ma, 2020" group="é" details="p. 23" \/>/u,
+        );
+        assert.match(result.text, /<ref name="Ma, 2020">/u);
+        assert.equal(result.citationsFormatted, 1);
+        assert.equal(
+            formatCitationWikitext(result.text, templateData).text,
+            result.text,
+        );
+    }
+});
+
+test("consolidates equivalent encoded groups without appending an empty duplicate list", () => {
+    const source = [
+        '<ref name="Book" group="é" details="p. 23">{{cite book|author=Ma|year=2020|title=Book}}</ref>',
+        '<ref name="Book" group="&eacute;">{{cite book|author=Ma|year=2020|title=Book}}</ref>',
+        '<references group="&eacute;" />',
+        '<references group="é" />',
+    ].join("\n");
+
+    for (const layout of ["inline", "block"] as const) {
+        const result = formatCitationWikitext(source, templateData, layout);
+        assert.equal(result.individualReferencesFound, 1);
+        assert.equal(result.text.match(/<references\b/gu)?.length, 1);
+        assert.match(result.text, /<references group="é" responsive>/u);
+        assert.equal(result.text.match(/<ref name="Ma, 2020">/gu)?.length, 1);
+        assert.equal(
+            formatCitationWikitext(result.text, templateData, layout).text,
+            result.text,
+        );
+    }
+});
+
+test("keeps literal named entity groups distinct through repeated formatting", () => {
+    const source = [
+        '<ref name="Book" group="&amp;eacute;" details="p. 23" />',
+        '<ref name="Book" group="&amp;eacute;">{{cite book|author=Ma|year=2020|title=Literal}}</ref>',
+        '<ref name="Book" group="&eacute;" details="p. 42" />',
+        '<ref name="Book" group="é">{{cite book|author=Ma|year=2020|title=Character}}</ref>',
+    ].join("\n");
+
+    for (const layout of ["inline", "block"] as const) {
+        const result = formatCitationWikitext(source, templateData, layout);
+        assert.equal(result.individualReferencesFound, 2);
+        assert.equal(result.text.match(/<references\b/gu)?.length, 2);
+        assert.match(
+            result.text,
+            /<ref name="Ma, 2020" group="&amp;eacute;" details="p. 23" \/>/u,
+        );
+        assert.match(
+            result.text,
+            /<ref name="Ma, 2020" group="é" details="p. 42" \/>/u,
+        );
+        assert.equal(
+            formatCitationWikitext(result.text, templateData, layout).text,
+            result.text,
+        );
+    }
+});
+
+test("reserves existing encoded anonymous-style names before numbering new notes", () => {
+    const source =
+        '<ref>Anonymous note.</ref><ref name=":1" /><ref name="&#58;1">Existing note.</ref><references />';
+    const result = formatCitationWikitext(source, templateData);
+
+    assert.match(result.text, /<ref name=":2">Anonymous note\.<\/ref>/u);
+    assert.match(result.text, /<ref name=":1">Existing note\.<\/ref>/u);
+    assert.equal(result.text.match(/<ref name=":1" \/>/gu)?.length, 2);
+    assert.equal(
+        formatCitationWikitext(result.text, templateData).text,
+        result.text,
+    );
+});
+
 function assertReferenceMarker(text: string, label: string): void {
     const lines = text.split("\n");
     const findIndexCallback = (line: string) => line.includes(` ${label} `);
@@ -318,7 +423,7 @@ const testMultipleWholeReferenceCitations = () => {
 
     assert.match(
         result.text,
-        /name="J\. M\. Taylor & Neimeyer, 2015; T\. Taylor, 2014, p\. 4"/u,
+        /name="J\. M\. Taylor &amp; Neimeyer, 2015; T\. Taylor, 2014, p\. 4"/u,
     );
     assert.match(
         result.text,
@@ -478,7 +583,7 @@ test("keeps unsupported enwiki R anchor parameters intact", () => {
     );
 
     assert.ok(result.text.includes("{{r|name=A&B|ref=CITEREFSmith|p=5}}"));
-    assert.match(result.text, /<ref name="A&B">\{\{Cite web /u);
+    assert.match(result.text, /<ref name="A&amp;B">\{\{Cite web /u);
     assert.equal(result.rTemplatesFound, 0);
 });
 
@@ -627,8 +732,11 @@ const testIncompleteAuthorAliases = () => {
 
     assert.match(result.text, /\| author1 = Horii &amp; Hayasaka/u);
     assert.match(result.text, /\| author2 = Editor/u);
-    assert.match(result.text, /<ref name="Horii & Hayasaka & Editor, 2025"/u);
-    assert.doesNotMatch(result.text, /name="[^"]*&amp;/u);
+    assert.match(
+        result.text,
+        /<ref name="Horii &amp; Hayasaka &amp; Editor, 2025"/u,
+    );
+    assert.doesNotMatch(result.text, /name="[^"]*&amp;amp;/u);
 };
 test(
     "normalizes incomplete author aliases and keeps ref ampersands literal",
@@ -662,7 +770,7 @@ const testInterviewSubjectOrdering = () => {
     const authorMatches = result.text.match(/\| author\d =/gu);
     const firstAuthors = authorMatches?.slice(0, 2);
     assert.deepEqual(firstAuthors, ["| author1 =", "| author2 ="]);
-    assert.match(result.text, /<ref name="Horii & Hayasaka, 2025"/u);
+    assert.match(result.text, /<ref name="Horii &amp; Hayasaka, 2025"/u);
 };
 test(
     "keeps Cite interview subjects together before its other fields",
@@ -776,8 +884,8 @@ const testManualSourceIdentity = () => {
     const result = formatCitationWikitext(source, generatedTemplateData);
     const rerun = formatCitationWikitext(result.text, generatedTemplateData);
 
-    assert.match(result.text, /name="Shinji & Hiroya, 2006, p\. 1"/u);
-    assert.match(result.text, /name="Shinji & Hiroya, 2006, p\. 2"/u);
+    assert.match(result.text, /name="Shinji &amp; Hiroya, 2006, p\. 1"/u);
+    assert.match(result.text, /name="Shinji &amp; Hiroya, 2006, p\. 2"/u);
     assert.doesNotMatch(result.text, /Shinji & Hiroya, 2006[ab]/u);
     assert.match(result.text, /751888p1\.html/u);
     assert.match(result.text, /751888p2\.html/u);
@@ -1081,6 +1189,187 @@ test("keeps multiple generic citations out of CS1 cite bundles", () => {
     assert.doesNotMatch(result.text, /citebundle/iu);
 });
 
+test("renames forward paired and self-closing uses as one named footnote", () => {
+    const source = [
+        "== First ==",
+        '<ref name="Book"></ref><ref name="Book" details="p. 23" />',
+        "== Second ==",
+        '<ref name="Book">{{cite book|author=Ma|date=2020|title=Book}}</ref>',
+        '<ref name="Book">{{cite book|author=Ma|date=2020|title=Book}}</ref>',
+        "<references />",
+    ].join("\n");
+    const first = formatCitationWikitext(source, templateData, "inline");
+
+    assert.equal(first.individualReferencesFound, 1);
+    assert.equal(first.referenceCallsFound, 4);
+    assert.match(first.text, /<ref name="Ma, 2020" details="p\. 23" \/>/u);
+    assert.equal(first.text.match(/<ref name="Ma, 2020">/gu)?.length, 1);
+    assertReferenceMarker(first.text, "§ 1    First");
+    assert.equal(
+        formatCitationWikitext(first.text, templateData, "inline").text,
+        first.text,
+    );
+});
+
+test("preserves conflicting full definitions under their original footnote name", () => {
+    const firstDefinition =
+        '<ref name="Book">{{cite book|author=First|title=First}}</ref>';
+    const conflicting =
+        '<ref name="Book">{{cite book|author=Second|title=Second}}</ref>';
+    const source =
+        '<ref name="Book" />' +
+        firstDefinition +
+        conflicting +
+        "<references />";
+    const result = formatCitationWikitext(source, templateData, "inline");
+
+    assert.ok(result.text.includes(firstDefinition));
+    assert.ok(result.text.includes(conflicting));
+    assert.ok(result.text.startsWith('<ref name="Book" />'));
+    assert.equal(result.individualReferencesFound, 1);
+    assert.equal(result.citationsFormatted, 0);
+    assert.equal(result.referencesMoved, 0);
+    assert.equal(
+        formatCitationWikitext(result.text, templateData, "inline").text,
+        result.text,
+    );
+});
+
+test("matches equivalent escaped footnote names and emits safe quoted uses", () => {
+    const source =
+        '<ref name="A&amp;B&quot;C" />' +
+        "<ref name='A&B\"C'>Plain source.</ref><references />";
+    const result = formatCitationWikitext(source, templateData, "inline");
+
+    assert.equal(result.individualReferencesFound, 1);
+    assert.equal(result.referenceTagsRenamed, 0);
+    assert.equal(
+        result.text.match(/<ref name="A&amp;B&quot;C" \/>/gu)?.length,
+        2,
+    );
+    assert.ok(
+        result.text.includes('<ref name="A&amp;B&quot;C">Plain source.</ref>'),
+    );
+    assert.equal(
+        formatCitationWikitext(result.text, templateData, "inline").text,
+        result.text,
+    );
+});
+
+test("renames forward uses with equivalent numeric or named reference entities", () => {
+    const cases = [
+        ['A"B', "A&#34;B"],
+        ['A"B', "A&#x22;B"],
+        ["A'B", "A&apos;B"],
+        ["A<B>", "A&lt;B&gt;"],
+    ];
+    for (const [literalName, encodedName] of cases) {
+        const source =
+            `<ref name="${literalName.replaceAll('"', "&quot;")}" />` +
+            `<ref name="${encodedName}">{{cite book|author=Ma|date=2020|title=Book}}</ref><references />`;
+        const result = formatCitationWikitext(source, templateData, "inline");
+
+        assert.equal(result.individualReferencesFound, 1);
+        assert.equal(
+            result.text.match(/<ref name="Ma, 2020" \/>/gu)?.length,
+            2,
+        );
+        assert.equal(
+            formatCitationWikitext(result.text, templateData, "inline").text,
+            result.text,
+        );
+    }
+});
+
+test("keeps literal entity names distinct from the characters they spell", () => {
+    const source =
+        '<ref name="A&amp;quot;B" /><ref name="A&amp;quot;B">Literal entity source.</ref>' +
+        '<ref name="A&quot;B" /><ref name=\'A"B\'>Quoted source.</ref><references />';
+    const result = formatCitationWikitext(source, templateData, "inline");
+
+    assert.equal(result.individualReferencesFound, 2);
+    assert.equal(
+        result.text.match(/<ref name="A&amp;quot;B" \/>/gu)?.length,
+        2,
+    );
+    assert.ok(
+        result.text.includes(
+            '<ref name="A&amp;quot;B">Literal entity source.</ref>',
+        ),
+    );
+    assert.ok(
+        result.text.includes('<ref name="A&quot;B">Quoted source.</ref>'),
+    );
+    assert.equal(
+        formatCitationWikitext(result.text, templateData, "inline").text,
+        result.text,
+    );
+});
+
+test("keeps R templates and entities inside sub-reference details untouched", () => {
+    const source =
+        '<ref name="Book" details=\'{{r|Other}} &quot;quote&quot; &lt;page&gt; "literal"\' />' +
+        '<ref name="Book">{{cite book|title=Book}}</ref><references />';
+    const result = formatCitationWikitext(
+        source,
+        templateData,
+        "inline",
+        "Lead",
+        englishTemplateNames,
+    );
+
+    assert.equal(result.rTemplatesFound, 0);
+    assert.match(
+        result.text,
+        /details="\{\{r\|Other\}\} &quot;quote&quot; &lt;page&gt; &quot;literal&quot;"/u,
+    );
+    assert.equal(
+        formatCitationWikitext(
+            result.text,
+            templateData,
+            "inline",
+            "Lead",
+            englishTemplateNames,
+        ).text,
+        result.text,
+    );
+});
+
+test("retains unsupported list details and reference attributes for Cite diagnostics", () => {
+    const cases = [
+        '<references><ref name="Book">body</ref><ref name="Book" details="p. 23" /></references>',
+        '<references><ref name="Book" details="p. 23" /></references>',
+        '<references><ref name="Book" details="p. 23">body</ref></references>',
+        '<references><ref name="Book" dir="rtl">body</ref></references>',
+        '<ref name="Book" /><references><ref name="Book">body</ref></references><references><ref name="Book" details="p. 23" /></references>',
+        '<ref name="Book" /><references><ref name="Book">body</ref></references><references><ref name="Book" broken="attribute">body</ref></references>',
+    ];
+    for (const source of cases) {
+        const result = formatCitationWikitext(source, templateData, "inline");
+        const attributeTag = source.match(
+            /<ref[^>]*(?:details|dir|broken)=[^>]*>(?:body<\/ref>)?/u,
+        )?.[0];
+        assert.ok(attributeTag);
+        assert.ok(result.text.includes(attributeTag));
+        assert.equal(
+            formatCitationWikitext(result.text, templateData, "inline").text,
+            result.text,
+        );
+    }
+});
+
+test("keeps directional definitions and follow references native", () => {
+    const definition = '<ref name="Book" dir="rtl">Main source.</ref>';
+    const follow = '<ref follow="Book">Additional text.</ref>';
+    const source =
+        definition + '<ref name="Book" />' + follow + "<references />";
+    const result = formatCitationWikitext(source, templateData, "inline");
+
+    assert.ok(result.text.includes(definition));
+    assert.ok(result.text.includes(follow));
+    assert.equal(result.referencesMoved, 0);
+});
+
 test(
     "names CITEREF-linked short citations from their source identity",
     testLinkedShortCitation,
@@ -1366,9 +1655,9 @@ function buildDragonQuestSource(): string {
 }
 
 function assertDragonQuestResult(text: string): void {
-    assert.match(text, /<ref name="Horii & Hayasaka, 2025a" \/>/u);
-    assert.match(text, /<ref name="Horii & Hayasaka, 2025b" \/>/u);
-    assert.match(text, /<ref name="Horii & Hayasaka, 2025c" \/>/u);
+    assert.match(text, /<ref name="Horii &amp; Hayasaka, 2025a" \/>/u);
+    assert.match(text, /<ref name="Horii &amp; Hayasaka, 2025b" \/>/u);
+    assert.match(text, /<ref name="Horii &amp; Hayasaka, 2025c" \/>/u);
     assert.match(text, /\| url-status = live/u);
     assert.doesNotMatch(text, /\| dead-url =/u);
     assert.match(text, /<\/ref>\n\n<\/references>/u);

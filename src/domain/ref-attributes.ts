@@ -2,6 +2,8 @@
  * Encoding helpers for citation reference attributes.
  */
 
+import { decodeHTMLStrict } from "entities";
+
 export interface ReferenceNameEscapeOptions {
     /**
      * Whether an existing amp entity may use non-lowercase spelling.
@@ -16,11 +18,7 @@ export interface ReferenceNameEscapeOptions {
  * @returns Decoded attribute text.
  */
 export function decodeReferenceAttribute(value: string): string {
-    return value
-        .replace(/&quot;/giu, '"')
-        .replace(/&amp;/giu, "&")
-        .replace(/&#0*38;/giu, "&")
-        .replace(/&#x0*26;/giu, "&");
+    return decodeReferenceDetailsAttribute(value);
 }
 
 /**
@@ -31,6 +29,43 @@ export function decodeReferenceAttribute(value: string): string {
  */
 export function escapeQuotedAttribute(value: string): string {
     return value.replace(/&/gu, "&amp;").replace(/"/gu, "&quot;");
+}
+
+/** Decodes details text once without interpreting nested wikitext. */
+export function decodeReferenceDetailsAttribute(value: string): string {
+    return value.replace(/&(?:[a-z][\da-z]*|#\d+|#x[\da-f]+);/giu, (entity) => {
+        const name = entity.slice(1, -1).toLowerCase();
+        if (!name.startsWith("#")) return decodeHTMLStrict(entity);
+        const hexadecimal = name.startsWith("#x");
+        const code = Number.parseInt(
+            name.slice(hexadecimal ? 2 : 1),
+            hexadecimal ? 16 : 10,
+        );
+        return code > 0 &&
+            code <= 0x10ffff &&
+            !(code >= 0xd800 && code <= 0xdfff)
+            ? String.fromCodePoint(code)
+            : entity;
+    });
+}
+
+/** Escapes new details text for storage in a native reference attribute. */
+export function escapeReferenceDetails(value: string): string {
+    return escapeQuotedAttribute(value)
+        .replace(/</gu, "&lt;")
+        .replace(/>/gu, "&gt;");
+}
+
+/** Preserves existing details entities while quoting the entered attribute. */
+export function formatReferenceDetailsAttribute(
+    value: string | undefined,
+): string {
+    if (value === undefined) return "";
+    const escaped = value
+        .replace(/"/gu, "&quot;")
+        .replace(/</gu, "&lt;")
+        .replace(/>/gu, "&gt;");
+    return ` details="${escaped}"`;
 }
 
 /**

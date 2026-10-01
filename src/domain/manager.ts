@@ -17,6 +17,7 @@ import {
 } from "./templates.ts";
 import {
     findCitationManagementProtectedRanges,
+    findReferenceAttributeRanges,
     isInWikitextRanges,
 } from "./protected-wikitext.ts";
 import {
@@ -25,6 +26,10 @@ import {
     type NativeRTemplateReference,
 } from "./r-template.ts";
 import { applyReplacements } from "./wikitext.ts";
+import {
+    decodeReferenceAttribute,
+    escapeReferenceDetails,
+} from "./ref-attributes.ts";
 import type { CitationLayout, TextReplacement } from "./types.ts";
 
 const HTML_COMMENT = /<!--([\s\S]*?)-->/gu;
@@ -97,7 +102,10 @@ export function findNameOverrideFields(
     templateNameContext: TemplateNameContext = DEFAULT_TEMPLATE_NAME_CONTEXT,
 ): NameOverrideField[] {
     const fields = new Map<string, NameOverrideField>();
-    const protectedRanges = findCitationManagementProtectedRanges(text);
+    const protectedRanges = [
+        ...findCitationManagementProtectedRanges(text),
+        ...findReferenceAttributeRanges(text),
+    ];
     for (const call of wikitext(text).template.getAll()) {
         if (
             !isCitationTemplate(call.name, templateNameContext) ||
@@ -130,7 +138,10 @@ export function applyNameOverrides(
 ): string {
     const byId = buildOverrideIndex(updates);
     const replacements: TextReplacement[] = [];
-    const protectedRanges = findCitationManagementProtectedRanges(text);
+    const protectedRanges = [
+        ...findCitationManagementProtectedRanges(text),
+        ...findReferenceAttributeRanges(text),
+    ];
     for (const call of wikitext(text).template.getAll()) {
         if (isInWikitextRanges(call.start, protectedRanges)) {
             continue;
@@ -487,12 +498,17 @@ function findCompactReferenceParts(
     context: TemplateNameContext,
 ): CompactReferenceParts {
     const protectedRanges = findCitationManagementProtectedRanges(text);
+    const attributeRanges = findReferenceAttributeRanges(text);
     const isActive = (start: number) =>
         !isInWikitextRanges(start, protectedRanges);
     const annotations = new Map(
         wikitext(text)
             .template.getAll()
-            .filter((call) => isActive(call.start))
+            .filter(
+                (call) =>
+                    isActive(call.start) &&
+                    !isInWikitextRanges(call.start, attributeRanges),
+            )
             .filter((call) => canCompactRpTemplateCall(call, context))
             .map((call) => [call.start, call]),
     );
@@ -520,7 +536,10 @@ function isCompactableSegment(
     segment: CompactReferenceSegment,
     context: TemplateNameContext,
 ): boolean {
-    return buildCompactRTemplateCall([segment], context) != null;
+    return (
+        !segment.name.includes("&") &&
+        buildCompactRTemplateCall([segment], context) != null
+    );
 }
 
 function shouldFlushCompactRun(
@@ -565,7 +584,10 @@ export function expandCompactReferenceCalls(
     text: string,
     templateNameContext: TemplateNameContext = DEFAULT_TEMPLATE_NAME_CONTEXT,
 ): string {
-    const protectedRanges = findCitationManagementProtectedRanges(text);
+    const protectedRanges = [
+        ...findCitationManagementProtectedRanges(text),
+        ...findReferenceAttributeRanges(text),
+    ];
     const isActiveCall = (call: ParsedTemplateCall) =>
         !isInWikitextRanges(call.start, protectedRanges);
     const expandCall = function expandCall(
@@ -575,7 +597,12 @@ export function expandCompactReferenceCalls(
         const result = {
             end: call.end,
             start: call.start,
-            text: names.map((name) => `<ref name="${name}" />`).join(""),
+            text: names
+                .map(
+                    (name) =>
+                        `<ref name="${escapeReferenceDetails(decodeReferenceAttribute(name))}" />`,
+                )
+                .join(""),
         };
         return result;
     };
@@ -640,7 +667,9 @@ function isFullRefDefinition(tag: RefTag): boolean {
  * @returns Whether a full ref contains the call.
  */
 function isInRefDefinition(call: ParsedTemplateCall, tags: RefTag[]): boolean {
-    return tags.some((tag) => call.start > tag.start && call.end < tag.end);
+    return tags.some(
+        (tag) => call.start >= tag.contentStart && call.end <= tag.contentEnd,
+    );
 }
 
 /**

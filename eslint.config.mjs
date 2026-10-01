@@ -51,9 +51,9 @@ export default defineConfig(
                 {
                     patterns: [
                         {
-                            regex: "(?:^|/)(?:app|features|platform|i18n)(?:/|$)|^(?!\\.{1,2}/)",
+                            regex: "(?:^|/)(?:app|features|platform|i18n)(?:/|$)|^(?!\\.{1,2}/|entities$)",
                             message:
-                                "Domain code depends only on domain, configuration, and shared modules.",
+                                "Domain code depends only on domain, configuration, shared modules, and the pure HTML entity decoder.",
                         },
                     ],
                 },

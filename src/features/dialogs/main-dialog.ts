@@ -26,12 +26,19 @@ type MainDialogStateKey =
     | "manualTemplate"
     | "open"
     | "referenceStyle"
+    | "referenceReuseDetails"
+    | "referenceReuseDialogOpen"
+    | "referenceReuseError"
+    | "referenceReuseSource"
+    | "referenceReuseSubReference"
+    | "referenceReuseSubReferences"
     | "scriptTitleMode"
     | "sectionFilterLabel"
     | "sourceInput"
     | "sourceSectionSelectors"
     | "sourceTablePaginationKey"
     | "sourceTableRows"
+    | "sourceTableGroups"
     | "warning";
 
 type MainDialogStateBindings = {
@@ -45,18 +52,26 @@ type MainDialogStateBindings = {
 type CodexIcons = typeof import("@wikimedia/codex-icons");
 
 export interface MainDialogActions {
+    canReuseListedSourceWithDetails(sourceId: string): boolean;
     cancelAllChanges(): void;
     close(): void;
+    closeReferenceReuseDialog(): void;
     createManualSource(): void;
     editListedSource(sourceId: string): void;
+    editListedSubReference(sourceId: string, subReferenceId: string): void;
     formatArticle(): Promise<void>;
-    insertListedSource(sourceId: string): void;
+    getReferenceReusePreview(): string;
+    insertListedSource(sourceId: string, event?: MouseEvent): void;
+    insertReferenceWithDetails(): void;
     onOpenChange(value: boolean): void;
+    onReferenceReuseDialogOpenChange(value: boolean): void;
     onSourcePaste(event: ClipboardEvent): void;
     openAnalysisTool(): void;
     openCs1Tool(): Promise<void>;
     openNonCs1Tool(): void;
+    openReferenceReuseDialog(sourceId: string): void;
     resolveEnteredSource(entered?: string): Promise<void>;
+    reuseListedSubReference(sourceId: string, subReferenceId: string): void;
     selectSourceSection(
         selector: SourceSectionSelector,
         selected: string | number,
@@ -65,6 +80,7 @@ export interface MainDialogActions {
     setCompactReferences(enabled: boolean): void;
     setFormatScriptTitles(enabled: boolean): void;
     setScriptTitleMode(value: unknown): void;
+    setSourceManagerContent(element: unknown): void;
 }
 
 /** Bindings exposed to the build-injected main dialog template. */

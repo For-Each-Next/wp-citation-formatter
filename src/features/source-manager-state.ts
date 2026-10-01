@@ -10,6 +10,7 @@ import {
 import type { SourceAnalysisCell } from "../domain/source-analysis.ts";
 import {
     type ExistingSource,
+    type ExistingSourceSubReference,
     getSourceDraftCitationNameCells,
     getSourceDraftCitationNameParts,
     listExistingSources,
@@ -122,6 +123,12 @@ export interface SourceManagerState extends SourceListDerivedState {
         readonly value: Array<{ label: string; value: string }>;
     };
     referenceStyle: { value: ReferenceStyle };
+    referenceReuseDetails: { value: string };
+    referenceReuseDialogOpen: { value: boolean };
+    referenceReuseError: { value: string };
+    referenceReuseSource: { value: ExistingSource | null };
+    referenceReuseSubReference: { value: ExistingSourceSubReference | null };
+    referenceReuseSubReferences: { value: ExistingSourceSubReference[] };
     scriptTitleMode: { value: ScriptTitleMode };
     sessionUndo: { value: AnalysisUndoSnapshot | null };
     sourceAnalysis: { value: EditableCitationSourceAnalysis };
@@ -249,6 +256,14 @@ function createInitialInterfaceState(Vue: VueModule, initialText: string) {
         parameterAliasDialogRowIndex: Vue.ref<number | null>(null),
         parameterAliasDialogValidationAttempted: Vue.ref(false),
         parameterAliasDialogValue: Vue.ref(""),
+        referenceReuseDetails: Vue.ref(""),
+        referenceReuseDialogOpen: Vue.ref(false),
+        referenceReuseError: Vue.ref(""),
+        referenceReuseSource: Vue.ref<ExistingSource | null>(null),
+        referenceReuseSubReference: Vue.ref<ExistingSourceSubReference | null>(
+            null,
+        ),
+        referenceReuseSubReferences: Vue.ref<ExistingSourceSubReference[]>([]),
         sessionUndo: Vue.ref<AnalysisUndoSnapshot>({
             afterText: initialText,
             beforeText: initialText,

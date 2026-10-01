@@ -276,7 +276,10 @@ export function canonicalizeCitation(
     citation: CitationTemplate,
     metadata: CitationTemplateData,
 ): CitationTemplate {
-    const resolved = resolveCitationParams(citation, metadata);
+    const resolved = resolveCitationParams(
+        withoutEmptyCitationParams(citation),
+        metadata,
+    );
     const sorted = sortCitationParams(citation.name, resolved, metadata);
     const suffixed = suffixRepeatedCitationParams(
         citation.name,
@@ -300,7 +303,10 @@ export function findCitationParameterCollisions(
     citation: CitationTemplate,
     metadata: CitationTemplateData,
 ): CitationParameterCollision[] {
-    const resolved = resolveCitationParams(citation, metadata);
+    const resolved = resolveCitationParams(
+        withoutEmptyCitationParams(citation),
+        metadata,
+    );
     const suffixed = suffixRepeatedCitationParams(
         citation.name,
         resolved,
@@ -377,6 +383,16 @@ export function suffixCitationParameterCollisions(
         return citation.params[param.sourceIndex];
     });
     return { name: citation.name, params };
+}
+
+/** Empty fields are omitted from formatted output and cannot reserve a repeat slot. */
+function withoutEmptyCitationParams(
+    citation: CitationTemplate,
+): CitationTemplate {
+    return {
+        ...citation,
+        params: citation.params.filter((param) => param.value.trim() !== ""),
+    };
 }
 
 function resolveCitationParams(

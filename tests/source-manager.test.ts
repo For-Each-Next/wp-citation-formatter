@@ -45,6 +45,264 @@ import {
 import { formatSourceUsageTitle } from "../src/features/source-list-presentation.ts";
 import { buildSourceSectionSelectors } from "../src/features/source-manager.ts";
 import { buildCs1CheckWikitext } from "../src/platform/mediawiki/cs1-check.ts";
+import { decodeReferenceDetailsAttribute } from "../src/domain/ref-attributes.ts";
+import { wikitext } from "../src/domain/parsing/index.ts";
+
+test("keeps template-valued subreference details outside editable source bodies", () => {
+    const details =
+        "{{cite web|title=Attribute<!-- keep -->|language=ja}} > {{r|Other}}";
+    const text = [
+        `<ref name="Book" details='${details}'>{{cite book|title=Actual|year=2020}}</ref>`,
+        '<ref name="Book" details="p. 42" />',
+    ].join("\n");
+    const sources = listExistingSources(text);
+
+    assert.equal(sources.length, 1);
+    assert.equal(sources[0].title, "Actual");
+    assert.equal(sources[0].referenceDetails, details);
+    assert.equal(sources[0].usageCount, 2);
+    assert.deepEqual(formatSourceScriptTitles(text, "enwiki"), {
+        formatted: 0,
+        text,
+    });
+    getRow(sources[0].draft, "title").value = "Updated";
+    const edited = replaceExistingSource(
+        text,
+        sources[0],
+        sources[0].draft,
+        "inline",
+    );
+    assert.ok(edited.includes(`details='${details}'`));
+    assert.ok(edited.endsWith('<ref name="Book" details="p. 42" />'));
+    assert.match(edited, /title = Updated/u);
+});
+
+test("builds safely quoted grouped subreferences even in compact reference style", () => {
+    const [source] = listExistingSources(
+        '<ref name="Book" group="note">{{cite book|title=Example}}</ref>',
+    );
+    const details = 'p. 23, "a < b & c" {{URL|https://example.test/?x=1&y=2}}';
+    const reuse = buildExistingSourceReference(source, true, details);
+    const [tag] = wikitext(reuse).reference.getAll();
+
+    assert.ok(tag.selfClosing);
+    assert.equal(tag.attributes.name, "Book");
+    assert.equal(tag.attributes.group, "note");
+    assert.equal(
+        decodeReferenceDetailsAttribute(tag.attributes.details),
+        details,
+    );
+    assert.match(reuse, /&quot;a &lt; b &amp; c&quot;/u);
+    assert.equal(
+        buildExistingSourceReference(source, true, ""),
+        '<ref name="Book" group="note" />',
+    );
+    assert.throws(() =>
+        buildExistingSourceReference(
+            { ...source, referenceName: "" },
+            false,
+            "p. 23",
+        ),
+    );
+});
+
+test("matches numeric entity names and preserves literal entities in reuse attributes", () => {
+    const text = [
+        "<ref name='A\"B' />",
+        '<ref name="A&#34;B">{{cite book|title=Quoted}}</ref>',
+        '<ref name="Literal&amp;quot;" group="note&amp;quot;">{{cite book|title=Literal}}</ref>',
+        '<ref name="Literal&amp;quot;" group="note&amp;quot;" details="p. 23" />',
+    ].join("\n");
+    const sources = listExistingSources(text);
+
+    assert.deepEqual(
+        sources.map((source) => source.usageCount),
+        [2, 2],
+    );
+    assert.equal(
+        buildExistingSourceReference(sources[0]),
+        '<ref name="A&quot;B" />',
+    );
+    assert.equal(
+        buildExistingSourceReference(sources[1], true),
+        '<ref name="Literal&amp;quot;" group="note&amp;quot;" />',
+    );
+    assert.equal(
+        listExistingSources(
+            text + buildExistingSourceReference(sources[1], true, "p. 42"),
+        )[1].usageCount,
+        3,
+    );
+    assert.equal(
+        buildExistingSourceReference({ ...sources[1], group: "" }, true),
+        '<ref name="Literal&amp;quot;" />',
+    );
+});
+
+test("matches HTML5 named entities and keeps nested literal identities distinct", () => {
+    const text = [
+        '<ref name="é" group="é" />',
+        '<ref name="&eacute;" group="&eacute;" details="&eacute;">{{cite book|title=Character}}</ref>',
+        '<ref name="&amp;eacute;" group="&amp;eacute;" details="&amp;eacute;">{{cite book|title=Literal}}</ref>',
+        '<ref name="&amp;eacute;" group="&amp;eacute;" />',
+    ].join("\n");
+    const sources = listExistingSources(text);
+
+    assert.deepEqual(
+        sources.map((source) => source.usageCount),
+        [2, 2],
+    );
+    assert.deepEqual(
+        sources.map((source) => source.referenceName),
+        ["é", "&eacute;"],
+    );
+    assert.deepEqual(
+        sources.map((source) => source.group),
+        ["é", "&eacute;"],
+    );
+    assert.deepEqual(
+        sources.map((source) => source.referenceDetails),
+        ["é", "&eacute;"],
+    );
+    assert.equal(
+        buildExistingSourceReference(
+            sources[0],
+            true,
+            sources[0].referenceDetails,
+        ),
+        '<ref name="é" group="é" details="é" />',
+    );
+    assert.equal(
+        buildExistingSourceReference(
+            sources[1],
+            true,
+            sources[1].referenceDetails,
+        ),
+        '<ref name="&amp;eacute;" group="&amp;eacute;" details="&amp;eacute;" />',
+    );
+    const edited =
+        text +
+        sources
+            .map((source) => buildExistingSourceReference(source))
+            .join("\n");
+    assert.deepEqual(
+        listExistingSources(edited).map((source) => source.usageCount),
+        [3, 3],
+    );
+});
+
+test("converts plain sources without discarding native ref attributes or details", () => {
+    const opening =
+        '<ref dir="rtl" name="Book" group="" details=\'p. &gt; 23, "quote" {{URL|https://example.test}}\'>';
+    const text = opening + "Original bibliography.</ref>";
+    const [source] = listExistingSources(text);
+    const draft = parseSourceDraft("{{cite book|title=Updated|year=2020}}");
+    const edited = replaceExistingSource(text, source, draft, "inline");
+
+    assert.ok(edited.startsWith(opening));
+    assert.ok(edited.endsWith("</ref>"));
+    assert.match(edited, /title = Updated/u);
+});
+
+test("uses the reference-list group for explicit empty and conflicting child groups", () => {
+    const text = [
+        '<ref name="Book" group="" />',
+        '<ref name="Book" group="note" details="p. 23" />',
+        '<references group=""><ref name="Book">{{cite book|title=Default}}</ref></references>',
+        '<references group="note"><ref name="Book" group="">{{cite book|title=Note}}</ref></references>',
+        '<references group="other"><ref name="Book" group="wrong">{{cite book|title=Other}}</ref></references>',
+    ].join("\n");
+    const sources = listExistingSources(text);
+
+    assert.deepEqual(
+        sources.map((source) => [
+            source.title,
+            source.group,
+            source.usageCount,
+        ]),
+        [
+            ["Default", "", 1],
+            ["Note", "note", 1],
+            ["Other", "other", 0],
+        ],
+    );
+    assert.equal(
+        buildExistingSourceReference(sources[0]),
+        '<ref name="Book" />',
+    );
+    assert.equal(
+        buildExistingSourceReference(sources[1]),
+        '<ref name="Book" group="note" />',
+    );
+});
+
+test("resolves forward and paired-empty reuses to one main source per group", () => {
+    const text = [
+        '<ref name="Book"></ref>',
+        '<ref name="Book" details="p. 23" />',
+        '<ref name="Book">{{cite book|title=Main|year=2020}}</ref>',
+        '<ref name="Book" details="p. 42">{{cite book|title=Main|year=2020}}</ref>',
+        '<ref name="Book" group="note">{{cite book|title=Different group}}</ref>',
+    ].join("\n");
+    const sources = listExistingSources(text);
+
+    assert.deepEqual(
+        sources.map((source) => [
+            source.title,
+            source.group,
+            source.usageCount,
+        ]),
+        [
+            ["Main", "", 4],
+            ["Different group", "note", 1],
+        ],
+    );
+    getRow(sources[0].draft, "title").value = "Updated";
+    const edited = replaceExistingSource(
+        text,
+        sources[0],
+        sources[0].draft,
+        "inline",
+    );
+    assert.equal([...edited.matchAll(/title = Updated/gu)].length, 2);
+    assert.ok(edited.includes('<ref name="Book" details="p. 42">'));
+    assert.ok(edited.includes('<ref name="Book" details="p. 23" />'));
+    assert.ok(
+        edited.endsWith(
+            '<ref name="Book" group="note">{{cite book|title=Different group}}</ref>',
+        ),
+    );
+});
+
+test("retains the first main definition and conflicting duplicate content", () => {
+    const text =
+        '<ref name="Book">{{cite book|title=First}}</ref>\n<ref name="Book">{{cite book|title=Conflicting}}</ref>';
+    const sources = listExistingSources(text);
+
+    assert.equal(sources.length, 1);
+    assert.equal(sources[0].title, "First");
+    assert.equal(sources[0].usageCount, 2);
+    getRow(sources[0].draft, "title").value = "Updated";
+    const edited = replaceExistingSource(
+        text,
+        sources[0],
+        sources[0].draft,
+        "inline",
+    );
+    assert.ok(
+        edited.endsWith(
+            '<ref name="Book">{{cite book|title=Conflicting}}</ref>',
+        ),
+    );
+});
+
+test("does not count short-footnote templates in subreference attributes as prose uses", () => {
+    const text = [
+        '<ref name="Book" details="{{sfn|Smith|2020}}">Plain source.</ref>',
+        "* {{cite book|last=Smith|year=2020|title=Uncited bibliography}}",
+    ].join("\n");
+    assert.equal(listExistingSources(text).length, 1);
+});
 
 function getRow(draft: SourceDraft, name: string) {
     const row = draft.rows.find((candidate) => candidate.name === name);
@@ -777,7 +1035,7 @@ test("keeps conflicting creator alias suggestions explicit", () => {
 const testExistingSourceListing = () => {
     const text = [
         "Lead.",
-        '<references><ref name="A &amp; B" group="note">',
+        '<references group="note"><ref name="A &amp; B" group="note">',
         "{{cite web|title=Example|url=https://example.test/a}}",
         "</ref></references>",
     ].join("");
@@ -795,11 +1053,11 @@ const testExistingSourceListing = () => {
         source.rawReference,
         text.slice(source.referenceStart, source.referenceEnd),
     );
-    assert.equal(source.reuseText, '<ref name="A & B" group="note" />');
+    assert.equal(source.reuseText, '<ref name="A &amp; B" group="note" />');
     assert.equal(buildExistingSourceReference(source), source.reuseText);
     assert.equal(
         buildExistingSourceReference(source, true),
-        '<ref name="A & B" group="note" />',
+        '<ref name="A &amp; B" group="note" />',
     );
     assert.equal(
         buildExistingSourceReference(

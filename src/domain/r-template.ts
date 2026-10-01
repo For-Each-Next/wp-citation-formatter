@@ -7,7 +7,8 @@ import {
 } from "./parsing/index.ts";
 
 import {
-    escapeReferenceName,
+    decodeReferenceAttribute,
+    escapeReferenceDetails,
     formatReferenceGroupAttribute,
     stripOptionalReferenceNameQuotes,
 } from "./ref-attributes.ts";
@@ -615,7 +616,8 @@ function buildReferenceTag(
 
 function buildReuseTag(name: string, group: string): string {
     const groupAttribute = formatReferenceGroupAttribute(group);
-    return `<ref name="${escapeReferenceName(name)}"${groupAttribute} />`;
+    const escapedName = escapeReferenceDetails(decodeReferenceAttribute(name));
+    return `<ref name="${escapedName}"${groupAttribute} />`;
 }
 
 function buildDefinitionTag(
@@ -624,7 +626,7 @@ function buildDefinitionTag(
     content: string,
 ): string {
     const groupAttribute = formatReferenceGroupAttribute(group);
-    const escapedName = escapeReferenceName(name);
+    const escapedName = escapeReferenceDetails(decodeReferenceAttribute(name));
     const opening = `<ref name="${escapedName}"${groupAttribute}>`;
     return `${opening}${content}</ref>`;
 }

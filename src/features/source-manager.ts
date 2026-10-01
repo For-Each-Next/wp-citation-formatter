@@ -10,6 +10,7 @@ import {
 import { detectCitationLayout } from "../domain/manager.ts";
 import {
     buildExistingSourceReference,
+    buildExistingSourceSubReference,
     canonicalizeSourceDraft,
     changeSourceDraftTemplate,
     createManualSourceDraft,
@@ -29,6 +30,7 @@ import {
     parseSourceInput,
     parseSourceUrl,
     replaceExistingSource,
+    replaceExistingSourceSubReferences,
     type ScriptTitleMode,
     serializeSourceDraft,
     type SourceDraft,
@@ -155,6 +157,7 @@ const CUSTOM_ANALYSIS_REPLACEMENT = "\u0000custom-analysis-value";
 const AUTOSIZE_DIALOG_TEXTAREA_SELECTOR = [
     ".cf-source-manager__draft-dialog .cdx-text-area__textarea",
     ".cf-source-manager__parameter-alias-dialog .cdx-text-area__textarea",
+    ".cf-source-manager__reference-reuse-dialog .cdx-text-area__textarea",
 ].join(", ");
 const URL_STATUSES = ["live", "dead", "unfit"] as const;
 const URL_DRAFT_PARAMETERS = new Set([
@@ -363,6 +366,7 @@ export function createSourceManagerComponent(
             cleanup,
         });
         const draftRowKey = createDraftRowKey();
+        const setSourceManagerContent = createSourceManagerContentBinding();
         return {
             analysisTabs: Vue.computed(() => buildAnalysisTabs(state)),
             canCheckCs1Tool: ["enwiki", "zhwiki"].includes(getCurrentWikiId()),
@@ -397,12 +401,13 @@ export function createSourceManagerComponent(
                 ...templateOptions.CITATION_TEMPLATE_OPTIONS,
             ],
             msg,
+            setSourceManagerContent,
             openUrlIcon: cdxIconNewWindow,
             customAnalysisReplacement: CUSTOM_ANALYSIS_REPLACEMENT,
             sourceTableColumns: [
                 {
                     id: "reference",
-                    label: msg("lookup.reference"),
+                    label: msg("lookup.authorYear"),
                     width: "28%",
                 },
                 { id: "source", label: msg("lookup.sourceColumn") },
@@ -434,6 +439,36 @@ export function createSourceManagerComponent(
         setup,
         template: SOURCE_MANAGER_TEMPLATE,
     });
+}
+
+/** Measures the tab bar so each source header sticks directly beneath it. */
+function createSourceManagerContentBinding(): (element: unknown) => void {
+    let currentContent: HTMLElement | null = null;
+    let observer: ResizeObserver | null = null;
+    return function setSourceManagerContent(element: unknown): void {
+        if (element === currentContent) return;
+        observer?.disconnect();
+        observer = null;
+        currentContent = element as HTMLElement | null;
+        const content = currentContent;
+        const tabs = content?.querySelector<HTMLElement>(".cdx-tabs__header");
+        if (content == null || tabs == null) return;
+        function updateTabHeight(): void {
+            if (currentContent !== content) return;
+            const height = tabs!.getBoundingClientRect().height;
+            if (height > 0) {
+                content!.style.setProperty(
+                    "--cf-source-manager-tabs-height",
+                    `${height}px`,
+                );
+            }
+        }
+        updateTabHeight();
+        if (typeof ResizeObserver !== "undefined") {
+            observer = new ResizeObserver(updateTabHeight);
+            observer.observe(tabs);
+        }
+    };
 }
 
 /**
@@ -3090,10 +3125,18 @@ function createLookupActions(
 ): Pick<
     MainDialogActions,
     | "createManualSource"
+    | "canReuseListedSourceWithDetails"
+    | "closeReferenceReuseDialog"
     | "editListedSource"
+    | "editListedSubReference"
     | "insertListedSource"
+    | "reuseListedSubReference"
+    | "getReferenceReusePreview"
+    | "insertReferenceWithDetails"
+    | "onReferenceReuseDialogOpenChange"
     | "onSourcePaste"
     | "resolveEnteredSource"
+    | "openReferenceReuseDialog"
     | "selectSourceSection"
 > {
     async function resolveEnteredSource(entered?: string): Promise<void> {
@@ -3105,13 +3148,197 @@ function createLookupActions(
     function createManualSource(): void {
         openManualSourceWhenIdle(context.state);
     }
-    function insertListedSource(sourceId: string): void {
+    function insertListedSource(sourceId: string, event?: MouseEvent): void {
+        if (
+            (event?.ctrlKey || event?.metaKey) &&
+            canReuseListedSourceWithDetails(sourceId)
+        ) {
+            openReferenceReuseDialog(sourceId);
+            return;
+        }
         insertListedSourceWhenIdle(context, sourceId);
     }
+    function editListedSubReference(
+        sourceId: string,
+        subReferenceId: string,
+    ): void {
+        if (context.state.loading.value) return;
+        const source = findExistingSourceById(context.state, sourceId);
+        const occurrence = source?.subReferences?.find(
+            (candidate) => candidate.id === subReferenceId,
+        );
+        if (source == null || occurrence == null) {
+            context.state.error.value = msg("lookup.sourceUnavailable");
+            return;
+        }
+        context.state.referenceReuseSource.value = source;
+        context.state.referenceReuseSubReference.value = occurrence;
+        context.state.referenceReuseSubReferences.value =
+            source.subReferences?.filter(
+                (candidate) => candidate.details === occurrence.details,
+            ) ?? [];
+        context.state.referenceReuseDetails.value = occurrence.details;
+        context.state.referenceReuseError.value = "";
+        context.state.referenceReuseDialogOpen.value = true;
+        scheduleVisibleTextAreaAutosize();
+    }
+    function reuseListedSubReference(
+        sourceId: string,
+        subReferenceId: string,
+    ): void {
+        if (context.state.loading.value) return;
+        const source = findExistingSourceById(context.state, sourceId);
+        const occurrence = source?.subReferences?.find(
+            (candidate) => candidate.id === subReferenceId,
+        );
+        const text = context.editor.read();
+        if (
+            source == null ||
+            occurrence == null ||
+            text.slice(occurrence.referenceStart, occurrence.referenceEnd) !==
+                occurrence.rawReference
+        ) {
+            context.state.error.value = msg("lookup.sourceUnavailable");
+            return;
+        }
+        const currentSource = findCurrentReusableSource(source);
+        if (currentSource == null) {
+            context.state.error.value = msg("lookup.sourceUnavailable");
+            return;
+        }
+        finishExistingSourceInsertion(
+            context,
+            currentSource,
+            occurrence.details,
+        );
+    }
+    function canReuseListedSourceWithDetails(sourceId: string): boolean {
+        const source = findExistingSourceById(context.state, sourceId);
+        return (
+            source != null &&
+            source.referenceKind !== "short-footnote" &&
+            source.referenceName !== ""
+        );
+    }
+    function openReferenceReuseDialog(sourceId: string): void {
+        if (
+            context.state.loading.value ||
+            !canReuseListedSourceWithDetails(sourceId)
+        ) {
+            return;
+        }
+        const source = findExistingSourceById(context.state, sourceId);
+        if (source == null) return;
+        context.state.referenceReuseSource.value = source;
+        context.state.referenceReuseSubReference.value = null;
+        context.state.referenceReuseSubReferences.value = [];
+        context.state.referenceReuseDetails.value = "";
+        context.state.referenceReuseError.value = "";
+        context.state.referenceReuseDialogOpen.value = true;
+        scheduleVisibleTextAreaAutosize();
+    }
+    function closeReferenceReuseDialog(): void {
+        context.state.referenceReuseDialogOpen.value = false;
+        context.state.referenceReuseSource.value = null;
+        context.state.referenceReuseSubReference.value = null;
+        context.state.referenceReuseSubReferences.value = [];
+        context.state.referenceReuseDetails.value = "";
+        context.state.referenceReuseError.value = "";
+    }
+    function onReferenceReuseDialogOpenChange(open: boolean): void {
+        if (!open) closeReferenceReuseDialog();
+    }
+    function getReferenceReusePreview(): string {
+        const source = context.state.referenceReuseSource.value;
+        const occurrence = context.state.referenceReuseSubReference.value;
+        if (occurrence != null) {
+            return buildExistingSourceSubReference(
+                occurrence,
+                context.state.referenceReuseDetails.value,
+            );
+        }
+        return source == null
+            ? ""
+            : buildExistingSourceReference(
+                  source,
+                  context.state.referenceStyle.value === "r",
+                  context.state.referenceReuseDetails.value,
+              );
+    }
+    function insertReferenceWithDetails(): void {
+        if (context.state.loading.value) return;
+        const selected = context.state.referenceReuseSource.value;
+        if (selected == null) return;
+        const occurrence = context.state.referenceReuseSubReference.value;
+        if (occurrence != null) {
+            try {
+                const beforeText = context.editor.read();
+                const afterText = replaceExistingSourceSubReferences(
+                    beforeText,
+                    selected,
+                    context.state.referenceReuseSubReferences.value,
+                    context.state.referenceReuseDetails.value,
+                    context.templateNameContext,
+                );
+                if (afterText !== beforeText) {
+                    clearAnalysisUndo(context.state);
+                    context.editor.write(afterText);
+                    recordSessionWrite(context.state, beforeText, afterText);
+                    refreshExistingSources(context.editor, context.state);
+                    showActionNotification(
+                        context,
+                        "sub-reference-updated",
+                        "success",
+                        msg("lookup.subReferenceUpdated"),
+                    );
+                }
+                closeReferenceReuseDialog();
+            } catch (error) {
+                context.state.referenceReuseError.value =
+                    error instanceof StaleSourceError
+                        ? msg("lookup.sourceUnavailable")
+                        : formatError(error);
+            }
+            return;
+        }
+        const source = findCurrentReusableSource(selected);
+        if (source == null) {
+            context.state.referenceReuseError.value = msg(
+                "lookup.sourceUnavailable",
+            );
+            return;
+        }
+        finishExistingSourceInsertion(
+            context,
+            source,
+            context.state.referenceReuseDetails.value,
+        );
+    }
+    function findCurrentReusableSource(
+        selected: ExistingSource,
+    ): ExistingSource | undefined {
+        return listExistingSources(
+            context.editor.read(),
+            context.templateNameContext,
+        ).find(
+            (candidate) =>
+                candidate.referenceKind !== "short-footnote" &&
+                candidate.referenceName === selected.referenceName &&
+                candidate.group === selected.group,
+        );
+    }
     return {
+        canReuseListedSourceWithDetails,
+        closeReferenceReuseDialog,
         createManualSource,
         editListedSource,
+        editListedSubReference,
         insertListedSource,
+        reuseListedSubReference,
+        getReferenceReusePreview,
+        insertReferenceWithDetails,
+        onReferenceReuseDialogOpenChange,
+        openReferenceReuseDialog,
         onSourcePaste(event: ClipboardEvent): void {
             handleSourcePaste(context, event);
         },
@@ -3276,11 +3503,20 @@ function insertListedExistingSource(
         context.state.error.value = msg("lookup.sourceUnavailable");
         return;
     }
+    finishExistingSourceInsertion(context, source);
+}
+
+function finishExistingSourceInsertion(
+    context: SourceManagerActionContext,
+    source: ExistingSource,
+    details?: string,
+): void {
     clearAnalysisUndo(context.state);
     insertExistingSource(
         context.editor,
         source,
         context.state.referenceStyle.value,
+        details,
     );
     showActionNotification(
         context,
@@ -3526,9 +3762,12 @@ function insertExistingSource(
     editor: editBox.EditBox,
     source: ExistingSource,
     style: ReferenceStyle,
+    details?: string,
 ): void {
     const compact = style === "r";
-    editor.replaceSelection(buildExistingSourceReference(source, compact));
+    editor.replaceSelection(
+        buildExistingSourceReference(source, compact, details),
+    );
 }
 
 /**

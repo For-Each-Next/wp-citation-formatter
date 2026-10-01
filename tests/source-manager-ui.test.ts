@@ -9,6 +9,7 @@ import type {
 } from "../src/domain/source-analysis.ts";
 import type {
     ExistingSource,
+    ExistingSourceSubReference,
     SourceDraft,
 } from "../src/domain/source-manager.ts";
 import type { CitationTemplateDataMap } from "../src/domain/types.ts";
@@ -31,6 +32,10 @@ import * as editBox from "../src/platform/edit-box/index.ts";
 import type { Logger } from "../src/shared/logging/index.ts";
 import type { ActionNotification } from "../src/platform/mediawiki/notifications/index.ts";
 import * as templateNames from "../src/domain/templates.ts";
+import type {
+    SourceTableGroup,
+    SourceTableRow,
+} from "../src/features/source-list-presentation.ts";
 import { cdxIconMerge, type Icon } from "@wikimedia/codex-icons";
 
 const executionTimerFinishes: string[] = [];
@@ -178,6 +183,14 @@ interface MountedManager extends Record<string, unknown> {
     };
     draftCs1Checking: { value: boolean };
     existingSources: { value: ExistingSource[] };
+    referenceReuseDetails: { value: string };
+    referenceReuseDialogOpen: { value: boolean };
+    referenceReuseError: { value: string };
+    referenceReuseSubReference: { value: ExistingSourceSubReference | null };
+    referenceReuseSubReferences: { value: ExistingSourceSubReference[] };
+    sourceTableGroups: { readonly value: SourceTableGroup[] };
+    sourceTableRows: { readonly value: SourceTableRow[] };
+    setSourceManagerContent: (element: unknown) => void;
     formatArticleDisabled: { readonly value: boolean };
     formatScriptTitles: { value: boolean };
     getOpenableDraftUrl: (value: string) => string | null | undefined;
@@ -239,6 +252,346 @@ const ALIAS_ONLY_CONSISTENCY_TEXT = [
     '<ref name="B">{{cite web|author=Jane Doe',
     "<!-- # Jane Doe -->|title=B|url=https://two.test/b}}</ref>",
 ].join("\n");
+
+const SUB_REFERENCE_TEXT = [
+    '<ref name="Book">{{Cite book|last=Doe|first=Jane|year=2020|title=A book}}</ref>',
+    'First.<ref name="Book" details="p. 23" />',
+    'Second.<ref name="Book" details="p. 23" />',
+    '<ref name="Other">Plain bibliography.</ref>',
+].join("\n");
+
+test("projects author/year sources and matching details as one counted child row", async () => {
+    const harness = installSourceManagerHarness([]);
+    try {
+        await openCitationFormatterDialog(
+            createMemoryEditor(SUB_REFERENCE_TEXT),
+        );
+        const manager = harness.getManager();
+        const rows = manager.sourceTableRows.value;
+        assert.equal(manager.existingSources.value.length, 2);
+        assert.equal(rows.length, 3);
+        assert.equal(rows[0]?.reference, "Doe, 2020");
+        assert.equal(rows[0]?.source, "A book");
+        assert.ok(rows[0]?.detailsTitle.includes("Book"));
+        assert.deepEqual(
+            rows.map((row) => row.source),
+            ["A book", "p. 23", "Plain bibliography."],
+        );
+        assert.equal(new Set(rows.map((row) => row.id)).size, rows.length);
+        assert.equal(rows[1]?.sourceId, rows[0]?.sourceId);
+        const occurrences = manager.existingSources.value[0]!.subReferences!;
+        assert.equal(occurrences.length, 2);
+        assert.equal(rows[1]?.subReferenceId, occurrences[0]?.id);
+        assert.deepEqual(
+            rows[1]?.subReferenceIds,
+            occurrences.map((occurrence) => occurrence.id),
+        );
+        assert.equal(rows[1]?.usageCount, 2);
+        assert.equal(rows[1]?.usageSummary, "2×");
+        assert.deepEqual(rows[0]?.subReferenceIds, []);
+        assert.equal(rows[2]?.reference, "Other");
+        const groups = manager.sourceTableGroups.value;
+        assert.equal(groups.length, 2);
+        assert.deepEqual(groups[0]?.source, rows[0]);
+        assert.equal(groups[0]?.source.usageCount, 3);
+        assert.equal(groups[0]?.source.subReferenceCount, 2);
+        assert.equal(groups[0]?.source.usageSummary, "3× (with 2 sub-refs)");
+        assert.deepEqual(groups[0]?.subReferences, rows.slice(1, 2));
+        assert.deepEqual(groups[1]?.source, rows[2]);
+        assert.equal(groups[1]?.source.usageCount, 1);
+        assert.equal(groups[1]?.source.subReferenceCount, 0);
+        assert.equal(groups[1]?.source.usageSummary, "1×");
+        assert.deepEqual(groups[1]?.subReferences, []);
+    } finally {
+        harness.restore();
+    }
+});
+
+test("groups exact decoded details within a source and combines usage sections", async () => {
+    const harness = installSourceManagerHarness([]);
+    const text = [
+        '<ref name="Book">{{Cite book|title=A book}}</ref>',
+        '<ref name="Book" details="p. 23" />',
+        '<ref name="Book" details="p. 24" />',
+        "== Later ==",
+        '<ref name="Book" details="p&#46; 23" />',
+        '<ref name="Book" details="P. 23" />',
+        '<ref name="Other">{{Cite book|title=Other book}}</ref>',
+        '<ref name="Other" details="p. 23" />',
+        '<ref name="Book" group="notes">{{Cite book|title=Notes book}}</ref>',
+        '<ref name="Book" group="notes" details="p. 23" />',
+    ].join("\n");
+    try {
+        const editor = createMemoryEditor(text);
+        await openCitationFormatterDialog(editor);
+        const manager = harness.getManager();
+        const groups = manager.sourceTableGroups.value;
+        assert.equal(groups.length, 3);
+        const first = groups[0]!;
+        assert.deepEqual(
+            first.subReferences.map((row) => [row.source, row.usageSummary]),
+            [
+                ["p. 23", "2×"],
+                ["p. 24", "1×"],
+                ["P. 23", "1×"],
+            ],
+        );
+        assert.equal(first.source.subReferenceCount, 4);
+        assert.equal(first.source.usageCount, 5);
+        assert.ok(first.subReferences[0]?.usageTitle.includes("§0 Lead"));
+        assert.ok(first.subReferences[0]?.usageTitle.includes("§1 Later"));
+        assert.equal(first.subReferences[0]?.subReferenceIds.length, 2);
+        for (const group of groups.slice(1)) {
+            assert.equal(group.subReferences.length, 1);
+            assert.equal(group.subReferences[0]?.source, "p. 23");
+            assert.equal(group.subReferences[0]?.usageCount, 1);
+        }
+        assert.equal(
+            manager.existingSources.value[0]?.subReferences?.length,
+            4,
+        );
+        assert.equal(editor.read(), text);
+    } finally {
+        harness.restore();
+    }
+});
+
+test("updates the frozen source offset when tabs resize and releases its observer on disposal", async () => {
+    const harness = installSourceManagerHarness([]);
+    const globals = globalThis as unknown as Record<string, unknown>;
+    const originalObserver = globals.ResizeObserver;
+    const updates: Array<[string, string]> = [];
+    const observed: unknown[] = [];
+    const callbacks: Array<() => void> = [];
+    let disconnectCount = 0;
+    let tabHeight = 48;
+    const tabs = { getBoundingClientRect: () => ({ height: tabHeight }) };
+    const content = {
+        querySelector(selector: string) {
+            assert.equal(selector, ".cdx-tabs__header");
+            return tabs;
+        },
+        style: {
+            setProperty(name: string, value: string) {
+                updates.push([name, value]);
+            },
+        },
+    };
+    globals.ResizeObserver = class {
+        constructor(callback: () => void) {
+            callbacks.push(callback);
+        }
+
+        disconnect() {
+            disconnectCount += 1;
+        }
+
+        observe(element: unknown) {
+            observed.push(element);
+        }
+    };
+    try {
+        await openCitationFormatterDialog(
+            createMemoryEditor(SUB_REFERENCE_TEXT),
+        );
+        const manager = harness.getManager();
+        manager.setSourceManagerContent(content);
+        assert.deepEqual(observed, [tabs]);
+        assert.deepEqual(updates, [
+            ["--cf-source-manager-tabs-height", "48px"],
+        ]);
+        tabHeight = 72;
+        callbacks[0]!();
+        assert.deepEqual(updates.at(-1), [
+            "--cf-source-manager-tabs-height",
+            "72px",
+        ]);
+        manager.setSourceManagerContent(null);
+        assert.equal(disconnectCount, 1);
+        tabHeight = 96;
+        callbacks[0]!();
+        assert.equal(updates.length, 2);
+    } finally {
+        if (originalObserver === undefined) {
+            delete globals.ResizeObserver;
+        } else {
+            globals.ResizeObserver = originalObserver;
+        }
+        harness.restore();
+    }
+});
+
+test("edits every occurrence in a grouped details row and supports session undo", async () => {
+    const harness = installSourceManagerHarness([]);
+    try {
+        const editor = createMemoryEditor(SUB_REFERENCE_TEXT);
+        await openCitationFormatterDialog(editor);
+        const manager = harness.getManager();
+        const source = manager.existingSources.value[0]!;
+        const occurrence = source.subReferences![0]!;
+        callAction(manager, "editListedSubReference", source.id, occurrence.id);
+        assert.equal(manager.referenceReuseDetails.value, "p. 23");
+        assert.equal(manager.referenceReuseSubReferences.value.length, 2);
+        manager.referenceReuseDetails.value = "p. 24";
+        callAction(manager, "insertReferenceWithDetails");
+        assert.equal(
+            editor.read(),
+            SUB_REFERENCE_TEXT.replaceAll('details="p. 23"', 'details="p. 24"'),
+        );
+        assert.equal(manager.referenceReuseDialogOpen.value, false);
+        assert.deepEqual(
+            manager.existingSources.value[0]?.subReferences?.map(
+                (item) => item.details,
+            ),
+            ["p. 24", "p. 24"],
+        );
+        assert.equal(manager.referenceReuseSubReference.value, null);
+        assert.deepEqual(manager.referenceReuseSubReferences.value, []);
+        const grouped = manager.sourceTableGroups.value[0]!.subReferences;
+        assert.equal(grouped.length, 1);
+        assert.equal(grouped[0]?.source, "p. 24");
+        assert.equal(grouped[0]?.usageSummary, "2×");
+        callAction(manager, "cancelAllChanges");
+        assert.equal(editor.read(), SUB_REFERENCE_TEXT);
+    } finally {
+        harness.restore();
+    }
+});
+
+test("merges edited details with an existing row and clears all merged occurrences", async () => {
+    const harness = installSourceManagerHarness([]);
+    const text = SUB_REFERENCE_TEXT.replace(
+        '<ref name="Other">',
+        'Third.<ref name="Book" details="p. 24" />\n<ref name="Other">',
+    );
+    try {
+        const editor = createMemoryEditor(text);
+        await openCitationFormatterDialog(editor);
+        const manager = harness.getManager();
+        const initial = manager.sourceTableGroups.value[0]!;
+        assert.equal(initial.subReferences.length, 2);
+        callAction(
+            manager,
+            "editListedSubReference",
+            initial.source.id,
+            initial.subReferences[0]!.subReferenceId,
+        );
+        manager.referenceReuseDetails.value = "p. 24";
+        callAction(manager, "insertReferenceWithDetails");
+        assert.equal(
+            editor.read(),
+            text.replaceAll('details="p. 23"', 'details="p. 24"'),
+        );
+        const merged = manager.sourceTableGroups.value[0]!;
+        assert.equal(merged.subReferences.length, 1);
+        assert.equal(merged.subReferences[0]?.usageSummary, "3×");
+        callAction(
+            manager,
+            "editListedSubReference",
+            merged.source.id,
+            merged.subReferences[0]!.subReferenceId,
+        );
+        assert.equal(manager.referenceReuseSubReferences.value.length, 3);
+        manager.referenceReuseDetails.value = "";
+        callAction(manager, "insertReferenceWithDetails");
+        assert.equal(
+            editor.read(),
+            text
+                .replaceAll(' details="p. 23"', "")
+                .replaceAll(' details="p. 24"', ""),
+        );
+        const cleared = manager.sourceTableGroups.value[0]!;
+        assert.deepEqual(cleared.subReferences, []);
+        assert.equal(cleared.source.subReferenceCount, 0);
+        assert.equal(cleared.source.usageCount, 4);
+        assert.equal(cleared.source.usageSummary, "4×");
+        assert.deepEqual(manager.referenceReuseSubReferences.value, []);
+        callAction(manager, "cancelAllChanges");
+        assert.equal(editor.read(), text);
+    } finally {
+        harness.restore();
+    }
+});
+
+test("refuses stale sub-reference edits and leaves the dialog open for recovery", async () => {
+    const harness = installSourceManagerHarness([]);
+    try {
+        const editor = createMemoryEditor(SUB_REFERENCE_TEXT);
+        await openCitationFormatterDialog(editor);
+        const manager = harness.getManager();
+        const source = manager.existingSources.value[0]!;
+        callAction(
+            manager,
+            "editListedSubReference",
+            source.id,
+            source.subReferences![0]!.id,
+        );
+        assert.equal(manager.referenceReuseSubReferences.value.length, 2);
+        manager.referenceReuseDetails.value = "p. 24";
+        const laterText = SUB_REFERENCE_TEXT.replace(
+            "Second.",
+            "Later change.",
+        );
+        editor.write(laterText);
+        callAction(manager, "insertReferenceWithDetails");
+        assert.equal(editor.read(), laterText);
+        assert.equal(manager.referenceReuseDialogOpen.value, true);
+        assert.equal(
+            manager.referenceReuseError.value,
+            "The selected citation is unavailable.",
+        );
+        callAction(manager, "closeReferenceReuseDialog");
+        assert.equal(manager.referenceReuseSubReference.value, null);
+        assert.deepEqual(manager.referenceReuseSubReferences.value, []);
+    } finally {
+        harness.restore();
+    }
+});
+
+test("sub-reference reuse copies details into a new native call in compact mode", async () => {
+    const harness = installSourceManagerHarness([]);
+    try {
+        const editor = createMemoryEditor(SUB_REFERENCE_TEXT);
+        await openCitationFormatterDialog(editor, { referenceStyle: "r" });
+        const manager = harness.getManager();
+        const source = manager.existingSources.value[0]!;
+        callAction(
+            manager,
+            "reuseListedSubReference",
+            source.id,
+            source.subReferences![0]!.id,
+        );
+        assert.equal(
+            editor.read(),
+            SUB_REFERENCE_TEXT + '<ref name="Book" details="p. 23" />',
+        );
+    } finally {
+        harness.restore();
+    }
+});
+
+test("Ctrl and Command use open an empty details draft without writing the editor", async () => {
+    const harness = installSourceManagerHarness([]);
+    try {
+        const editor = createMemoryEditor(SUB_REFERENCE_TEXT);
+        await openCitationFormatterDialog(editor);
+        const manager = harness.getManager();
+        const source = manager.existingSources.value[0]!;
+        for (const modifier of [{ ctrlKey: true }, { metaKey: true }]) {
+            callAction(manager, "insertListedSource", source.id, modifier);
+            assert.equal(manager.referenceReuseDialogOpen.value, true);
+            assert.equal(manager.referenceReuseDetails.value, "");
+            assert.equal(manager.referenceReuseSubReference.value, null);
+            assert.deepEqual(manager.referenceReuseSubReferences.value, []);
+            assert.equal(editor.read(), SUB_REFERENCE_TEXT);
+            callAction(manager, "closeReferenceReuseDialog");
+        }
+        callAction(manager, "insertListedSource", source.id);
+        assert.equal(editor.read(), SUB_REFERENCE_TEXT + '<ref name="Book" />');
+    } finally {
+        harness.restore();
+    }
+});
 
 test("notifies when duplicating a source draft", async () => {
     const harness = installSourceManagerHarness([]);
@@ -1267,11 +1620,12 @@ function assertCs1SourceOrder(
 function callAction(
     manager: MountedManager,
     name: string,
-    argument?: unknown,
+    ...arguments_: unknown[]
 ): void {
-    const action = manager[name] as ((value?: unknown) => void) | undefined;
+    const action = manager[name] as
+        ((...values: unknown[]) => void) | undefined;
     assert.ok(action, `Missing ${name} action`);
-    action(argument);
+    action(...arguments_);
 }
 
 async function callAsyncAction(

@@ -188,6 +188,50 @@ test("suffixes repeated parameters beside the first value", () => {
     assert.equal(second.text, first.text);
 });
 
+test("does not let blank creator aliases displace a populated author", () => {
+    const first = formatCitationTemplate(
+        "{{cite web|last1= |first1=|author=糸井重里|date=2000-08-22|title=座談会}}",
+        generatedTemplateData["cite web"],
+        "inline",
+    );
+
+    assert.match(first.text, /\| author = 糸井重里/u);
+    assert.doesNotMatch(first.text, /author1-a|last1|first1/u);
+    assert.deepEqual(first.parameterCollisions, []);
+    assert.equal(getCitationIdentity(first.citation).author, "糸井重里");
+    assert.equal(
+        formatCitationTemplate(
+            first.text,
+            generatedTemplateData["cite web"],
+            "inline",
+        ).text,
+        first.text,
+    );
+});
+
+test("does not count empty repeated fields as populated collisions", () => {
+    const first = formatCitationTemplate(
+        "{{cite web|title= |title=First|title=|title=Repeat}}",
+        generatedTemplateData["cite web"],
+        "inline",
+    );
+
+    assert.equal(
+        first.text,
+        "{{Cite web | title = First | title-a = Repeat }}",
+    );
+    assert.equal(first.parameterCollisions.length, 1);
+    assert.equal(first.parameterCollisions[0].renamedParameter, "title-a");
+    assert.equal(
+        formatCitationTemplate(
+            first.text,
+            generatedTemplateData["cite web"],
+            "inline",
+        ).text,
+        first.text,
+    );
+});
+
 test("keeps a repeated creator field invalid and stable", () => {
     const first = formatCitationTemplate(
         "{{cite journal|last=First|last=Repeat|title=T}}",

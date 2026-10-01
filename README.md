@@ -47,7 +47,7 @@ VisualEditor source mode. Changes stay in the editor until you publish them.
 - Create citations from a URL, DOI, ISBN, ISSN, PMID, PMCID, QID, pasted
   citation, or manually entered details.
 - Browse and filter article sources, inspect their uses, edit them, and reuse
-  references at the cursor.
+  references at the cursor with optional sub-reference details.
 - Format CS1 and other `Cite` templates in inline or block style while
   preserving unsupported fields and protected wikitext.
 - Normalize citation parameters, dates, and language codes; name references,

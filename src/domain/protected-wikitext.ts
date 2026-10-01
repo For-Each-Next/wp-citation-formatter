@@ -6,6 +6,13 @@ import { wikitext } from "./parsing/index.ts";
 
 export type WikitextRange = readonly [start: number, end: number];
 
+/** Finds native reference openings, whose attribute templates are not citations. */
+export function findReferenceAttributeRanges(text: string): WikitextRange[] {
+    return wikitext(text)
+        .reference.getAll()
+        .map((tag) => [tag.start, tag.contentStart] as const);
+}
+
 /**
  * Literal tags historically skipped by end-to-end citation formatting.
  */

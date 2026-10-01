@@ -105,7 +105,8 @@ async function bundleSource(entryPoint, readableAssets = false) {
     const forbiddenDependencies = Object.keys(result.metafile.inputs).filter(
         (input) =>
             input.includes("node_modules/") &&
-            !input.includes("node_modules/@wikimedia/codex-icons/"),
+            !input.includes("node_modules/@wikimedia/codex-icons/") &&
+            !input.includes("node_modules/entities/"),
     );
     if (forbiddenDependencies.length > 0) {
         throw new Error(
@@ -187,7 +188,7 @@ function mediaWikiArtifact(program) {
         " *",
         ` * @name ${manifest.name}`,
         ` * @version ${manifest.version}`,
-        " * @license CC0-1.0 AND MIT AND CC-BY-4.0",
+        " * @license CC0-1.0 AND MIT AND CC-BY-4.0 AND BSD-2-Clause",
         " */",
         "",
         licenseNotice(),
@@ -206,7 +207,7 @@ function userscriptArtifact(program) {
         "// @namespace    citation-formatter",
         `// @version      ${manifest.version}`,
         `// @description  ${manifest.description}`,
-        "// @license      CC0-1.0 AND MIT AND CC-BY-4.0",
+        "// @license      CC0-1.0 AND MIT AND CC-BY-4.0 AND BSD-2-Clause",
         "// @match        https://*.wikipedia.org/*",
         "// @grant        none",
         "// @run-at       document-end",

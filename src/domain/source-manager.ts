@@ -21,13 +21,14 @@ import { serializeGenericCitation } from "./generic-citation.ts";
 import { getCitationOutputParams } from "./post-formatter.ts";
 import {
     findSourceDiscoveryProtectedRanges,
+    findReferenceAttributeRanges,
     isInWikitextRanges,
     maskWikitextRanges,
 } from "./protected-wikitext.ts";
 import {
     decodeReferenceAttribute,
-    escapeReferenceName,
-    formatReferenceGroupAttribute,
+    decodeReferenceDetailsAttribute,
+    escapeReferenceDetails,
     stripOptionalReferenceNameQuotes,
 } from "./ref-attributes.ts";
 import { normalizeSourceUrl, parseSourceUrl } from "./source-url.ts";
@@ -325,11 +326,13 @@ export interface ExistingSource {
     rawTemplate: string;
     referenceEnd: number;
     referenceKind?: "reference" | "short-footnote";
+    referenceDetails: string;
     referenceName: string;
     referenceStart: number;
     reuseText: string;
     sectionIds: string[];
     status: ExistingSourceStatus;
+    subReferences?: ExistingSourceSubReference[];
     templateEnd: number;
     templateStart: number;
     title: string;
@@ -337,6 +340,16 @@ export interface ExistingSource {
     url: string;
     usePositions?: number[];
     usageCount: number;
+}
+
+/** One native details use, retained separately even when its text repeats. */
+export interface ExistingSourceSubReference {
+    details: string;
+    id: string;
+    rawReference: string;
+    referenceEnd: number;
+    referenceStart: number;
+    sectionIds: string[];
 }
 
 export interface SourceSection {
@@ -359,6 +372,7 @@ interface ReferenceContainer {
 }
 
 interface SourceReference {
+    details: string;
     end: number;
     group: string;
     name: string;
@@ -1110,7 +1124,10 @@ export function formatSourceScriptTitles(
     templateNameContext: TemplateNameContext = DEFAULT_TEMPLATE_NAME_CONTEXT,
 ): { formatted: number; text: string } {
     const replacements: TextReplacement[] = [];
-    const protectedRanges = findSourceDiscoveryProtectedRanges(text);
+    const protectedRanges = [
+        ...findSourceDiscoveryProtectedRanges(text),
+        ...findReferenceAttributeRanges(text),
+    ];
     let formatted = 0;
     for (const call of wikitext(text).template.getAll()) {
         const nestedReplacement = replacements.some(
@@ -1266,7 +1283,27 @@ export function listExistingSources(
         templateNameContext,
     );
     addShortFootnoteSources(sources, text, calls, templateNameContext);
-    const result = [...sources.values()];
+    const firstDefinitions = new Map<string, number>();
+    const result = [...sources.values()]
+        .sort((left, right) => left.templateStart - right.templateStart)
+        .filter(function retainFirstNamedDefinition(source) {
+            if (
+                source.referenceKind === "short-footnote" ||
+                source.referenceName === ""
+            ) {
+                return true;
+            }
+            const key = buildReferenceUsageKey(
+                source.referenceName,
+                source.group,
+            );
+            const firstStart = firstDefinitions.get(key);
+            if (firstStart == null) {
+                firstDefinitions.set(key, source.referenceStart);
+                return true;
+            }
+            return firstStart === source.referenceStart;
+        });
     assignExistingSourceSections(
         result,
         masked,
@@ -1274,9 +1311,8 @@ export function listExistingSources(
         containers,
         templateNameContext,
     );
-    return result.sort(
-        (left, right) => left.templateStart - right.templateStart,
-    );
+    assignExistingSourceSubReferences(result, text, masked, containers);
+    return result;
 }
 
 /**
@@ -1478,6 +1514,7 @@ export function findExistingSources(
  *
  * @param source - Source text.
  * @param compact - Compact value.
+ * @param details - Wikitext details for this use; empty reuses the main reference.
  * @returns Built reuse tag when named, otherwise returns the full ref.
  */
 export function buildExistingSourceReference(
@@ -1487,7 +1524,15 @@ export function buildExistingSourceReference(
     > &
         Partial<Pick<ExistingSource, "reuseText">>,
     compact: boolean = false,
+    details: string = "",
 ): string {
+    if (
+        details !== "" &&
+        (source.referenceKind === "short-footnote" ||
+            source.referenceName === "")
+    ) {
+        throw new Error("Sub-references require a named native reference.");
+    }
     if (source.referenceKind === "short-footnote") {
         return source.reuseText ?? source.rawReference;
     }
@@ -1496,14 +1541,128 @@ export function buildExistingSourceReference(
     }
     if (
         compact &&
+        details === "" &&
         source.group === "" &&
-        !/[|={}]/u.test(source.referenceName)
+        !/[&|={}]/u.test(source.referenceName)
     ) {
         return `{{r|${source.referenceName}}}`;
     }
     const name = escapeSourceReferenceName(source.referenceName);
-    const group = formatReferenceGroupAttribute(source.group);
-    return `<ref name="${name}"${group} />`;
+    const group = formatSourceReferenceGroup(source.group);
+    const detailsAttribute =
+        details === "" ? "" : ` details="${escapeReferenceDetails(details)}"`;
+    return `<ref name="${name}"${group}${detailsAttribute} />`;
+}
+
+/** Builds one edited details use while preserving its other markup. */
+export function buildExistingSourceSubReference(
+    occurrence: ExistingSourceSubReference,
+    details: string,
+): string {
+    const [tag] = wikitext(occurrence.rawReference).reference.getAll();
+    if (
+        tag == null ||
+        tag.start !== 0 ||
+        tag.end !== occurrence.rawReference.length
+    ) {
+        throw new StaleSourceError("The sub-reference is no longer available.");
+    }
+    const opening = occurrence.rawReference.slice(0, tag.contentStart);
+    const closingStart = opening.match(/\/?\s*>$/u)?.index ?? opening.length;
+    const attributePattern =
+        /\s+([^\s=/>]+)(?:\s*=\s*(?:"[^"]*"|'[^']*'|[^\s"'=<>`]+))?/gu;
+    const attributes = [
+        ...opening.slice(0, closingStart).matchAll(attributePattern),
+    ].filter((match) => match[1].toLowerCase() === "details");
+    if (attributes.length === 0) {
+        throw new StaleSourceError("The sub-reference is no longer available.");
+    }
+    if (details === occurrence.details) {
+        return occurrence.rawReference;
+    }
+    const replacements = attributes.map((match, index) => ({
+        end: match.index + match[0].length,
+        start: match.index,
+        text:
+            index === attributes.length - 1 && details !== ""
+                ? ` details="${escapeReferenceDetails(details)}"`
+                : "",
+    }));
+    const updatedOpening = applyReplacements(opening, replacements);
+    return updatedOpening + occurrence.rawReference.slice(tag.contentStart);
+}
+
+/** Updates only one recorded native details occurrence. */
+export function replaceExistingSourceSubReference(
+    text: string,
+    source: ExistingSource,
+    occurrence: ExistingSourceSubReference,
+    details: string,
+    templateNameContext: TemplateNameContext = DEFAULT_TEMPLATE_NAME_CONTEXT,
+): string {
+    return replaceExistingSourceSubReferences(
+        text,
+        source,
+        [occurrence],
+        details,
+        templateNameContext,
+    );
+}
+
+/** Updates recorded details occurrences together after validating every use. */
+export function replaceExistingSourceSubReferences(
+    text: string,
+    source: ExistingSource,
+    occurrences: readonly ExistingSourceSubReference[],
+    details: string,
+    templateNameContext: TemplateNameContext = DEFAULT_TEMPLATE_NAME_CONTEXT,
+): string {
+    if (
+        source.referenceKind === "short-footnote" ||
+        source.referenceName === "" ||
+        occurrences.some(
+            (occurrence) =>
+                text.slice(
+                    occurrence.referenceStart,
+                    occurrence.referenceEnd,
+                ) !== occurrence.rawReference,
+        )
+    ) {
+        throw new StaleSourceError(
+            "The sub-reference changed after it was opened.",
+        );
+    }
+    const currentSource = listExistingSources(text, templateNameContext).find(
+        (candidate) =>
+            candidate.referenceKind !== "short-footnote" &&
+            candidate.referenceName === source.referenceName &&
+            candidate.group === source.group,
+    );
+    const currentOccurrences = new Map(
+        (currentSource?.subReferences ?? []).map((occurrence) => [
+            occurrence.referenceStart,
+            occurrence,
+        ]),
+    );
+    for (const occurrence of occurrences) {
+        const current = currentOccurrences.get(occurrence.referenceStart);
+        if (
+            current?.referenceEnd !== occurrence.referenceEnd ||
+            current.rawReference !== occurrence.rawReference
+        ) {
+            throw new StaleSourceError(
+                "The sub-reference is no longer available.",
+            );
+        }
+    }
+    return applyReplacements(
+        text,
+        occurrences.map((occurrence) => ({
+            end: occurrence.referenceEnd,
+            start: occurrence.referenceStart,
+            text: buildExistingSourceSubReference(occurrence, details),
+        })),
+    );
 }
 
 /**
@@ -1535,7 +1694,80 @@ export function replaceExistingSource(
         start: source.templateStart,
         text: replacementText,
     };
-    return applyReplacements(text, [replacement]);
+    return applyReplacements(text, [
+        replacement,
+        ...buildDuplicateSourceEdits(text, source, citation),
+    ]);
+}
+
+/** Keeps repeated identical definitions consistent when their source is edited. */
+function buildDuplicateSourceEdits(
+    text: string,
+    source: ExistingSource,
+    citation: string,
+): TextReplacement[] {
+    if (
+        source.referenceName === "" ||
+        source.referenceKind === "short-footnote"
+    ) {
+        return [];
+    }
+    const [original] = wikitext(source.rawReference).reference.getAll();
+    if (original == null || original.selfClosing || original.start !== 0) {
+        return [];
+    }
+    const masked = maskWikitextRanges(
+        text,
+        findSourceDiscoveryProtectedRanges(text),
+    );
+    const calls = findRestoredTemplateCalls(text, masked);
+    const containers = findReferenceContainers(
+        masked,
+        calls,
+        DEFAULT_TEMPLATE_NAME_CONTEXT,
+    );
+    return wikitext(masked)
+        .reference.getAll()
+        .flatMap(function editMatchingDefinition(tag) {
+            const group = getEffectiveReferenceGroup(
+                tag.start,
+                tag.attributes.group || "",
+                containers,
+            );
+            if (
+                tag.selfClosing ||
+                tag.start === source.referenceStart ||
+                group !== source.group ||
+                decodeReferenceAttribute(tag.attributes.name || "") !==
+                    source.referenceName ||
+                text.slice(tag.contentStart, tag.contentEnd) !==
+                    original.content
+            ) {
+                return [];
+            }
+            if (source.status === "non-standard") {
+                return [
+                    {
+                        start: tag.start,
+                        end: tag.end,
+                        text: buildConvertedReference(
+                            {
+                                ...source,
+                                rawReference: text.slice(tag.start, tag.end),
+                            },
+                            citation,
+                        ),
+                    },
+                ];
+            }
+            const start =
+                tag.contentStart +
+                source.templateStart -
+                source.referenceStart -
+                original.contentStart;
+            const end = start + source.rawTemplate.length;
+            return [{ start, end, text: citation }];
+        });
 }
 
 /**
@@ -1549,11 +1781,24 @@ function buildConvertedReference(
     source: ExistingSource,
     citation: string,
 ): string {
+    const [native] = wikitext(source.rawReference).reference.getAll();
+    if (
+        native != null &&
+        native.start === 0 &&
+        native.end === source.rawReference.length &&
+        !native.selfClosing
+    ) {
+        return (
+            source.rawReference.slice(0, native.contentStart) +
+            citation +
+            source.rawReference.slice(native.contentEnd)
+        );
+    }
     const name =
         source.referenceName === ""
             ? ""
             : ` name="${escapeSourceReferenceName(source.referenceName)}"`;
-    const group = formatReferenceGroupAttribute(source.group);
+    const group = formatSourceReferenceGroup(source.group);
     return `<ref${name}${group}>${citation}</ref>`;
 }
 
@@ -1574,10 +1819,57 @@ function buildExistingSourceSearchText(source: ExistingSource): string {
         source.archiveUrl,
         source.group,
         source.draft.template,
+        ...(source.subReferences ?? []).map((occurrence) => occurrence.details),
         ...draftText,
     ]
         .join("\n")
         .toLowerCase();
+}
+
+/** Associates every prose details tag with its named main source. */
+function assignExistingSourceSubReferences(
+    sources: ExistingSource[],
+    text: string,
+    masked: string,
+    containers: ReferenceContainer[],
+): void {
+    const sections = findSourceSections(masked);
+    const occurrences = new Map<string, ExistingSourceSubReference[]>();
+    for (const tag of wikitext(masked).reference.getAll()) {
+        if (isInReferenceContainer(tag.start, containers)) {
+            continue;
+        }
+        const rawReference = text.slice(tag.start, tag.end);
+        const [original] = wikitext(rawReference).reference.getAll();
+        const name = decodeReferenceAttribute(original?.attributes.name ?? "");
+        const details = decodeReferenceDetailsAttribute(
+            original?.attributes.details ?? "",
+        );
+        if (name === "" || details === "") {
+            continue;
+        }
+        const group = decodeReferenceAttribute(
+            original?.attributes.group ?? "",
+        );
+        const key = buildReferenceUsageKey(name, group);
+        const uses = occurrences.get(key) ?? [];
+        uses.push({
+            details,
+            id: `${tag.start}:sub-reference`,
+            rawReference,
+            referenceEnd: tag.end,
+            referenceStart: tag.start,
+            sectionIds: [getSourceSectionAtPosition(tag.start, sections)],
+        });
+        occurrences.set(key, uses);
+    }
+    for (const source of sources) {
+        const key = buildReferenceUsageKey(source.referenceName, source.group);
+        source.subReferences =
+            source.referenceKind === "short-footnote"
+                ? []
+                : (occurrences.get(key) ?? []);
+    }
 }
 
 /**
@@ -2288,8 +2580,10 @@ function addAliasComment(
  * @returns Resulting values.
  */
 function findRestoredTemplateCalls(text: string, masked: string) {
+    const referenceOpenings = findReferenceAttributeRanges(masked);
     return wikitext(masked)
         .templates.getAll()
+        .filter((call) => !isInWikitextRanges(call.start, referenceOpenings))
         .map(function restoreCall(call) {
             const raw = text.slice(call.start, call.end);
             return wikitext(raw).templates.parser(call.start);
@@ -2315,25 +2609,28 @@ function addNativeRefSources(
 ): void {
     const tags = wikitext(masked)
         .reference.getAll()
-        .filter((tag) => !tag.selfClosing);
+        .filter((tag) => !tag.selfClosing && tag.content.trim() !== "");
     for (const tag of tags) {
-        const openingEnd = masked.indexOf(">", tag.start) + 1;
-        const closingLength = tag.raw.match(/<\/ref\s*>$/iu)?.[0].length ?? 0;
-        const contentEnd = tag.end - closingLength;
-        const enteredGroup = tag.attributes.group || "";
-        const group =
-            enteredGroup === ""
-                ? getContainerGroup(tag.start, containers)
-                : decodeReferenceAttribute(enteredGroup);
+        const raw = text.slice(tag.start, tag.end);
+        const [originalTag] = wikitext(raw).reference.getAll();
+        const group = getEffectiveReferenceGroup(
+            tag.start,
+            tag.attributes.group || "",
+            containers,
+        );
         const reference = {
+            details: decodeReferenceDetailsAttribute(
+                originalTag?.attributes.details ?? "",
+            ),
             end: tag.end,
             group,
             name: decodeReferenceAttribute(tag.attributes.name || ""),
-            raw: text.slice(tag.start, tag.end),
+            raw,
             start: tag.start,
         };
         const nested = calls.filter(
-            (call) => call.start >= openingEnd && call.end <= contentEnd,
+            (call) =>
+                call.start >= tag.contentStart && call.end <= tag.contentEnd,
         );
         const added = addReferenceCitationSources(
             sources,
@@ -2412,8 +2709,9 @@ function addShortFootnoteSources(
     const callsByStart = new Map(calls.map((call) => [call.start, call]));
     const normalizeCurrentTemplateName = (name: string) =>
         normalizeTemplateName(name, templateNameContext);
+    const referenceOpenings = findReferenceAttributeRanges(text);
     for (const definition of findShortFootnoteCitations(
-        text,
+        maskWikitextRanges(text, referenceOpenings),
         normalizeCurrentTemplateName,
     )) {
         const call = callsByStart.get(definition.start);
@@ -2431,6 +2729,7 @@ function addShortFootnoteSources(
             rawTemplate: call.raw,
             referenceEnd: call.end,
             referenceKind: "short-footnote",
+            referenceDetails: "",
             referenceName: definition.reuseText,
             referenceStart: call.start,
             reuseText: definition.reuseText,
@@ -2477,11 +2776,13 @@ function parseCompactDefinition(
     }
     const enteredName = named.get("name") ?? named.get("n") ?? positional[0];
     const enteredGroup = named.get("group") ?? named.get("g") ?? "";
-    const group =
-        enteredGroup === ""
-            ? getContainerGroup(call.start, containers)
-            : decodeReferenceAttribute(enteredGroup);
+    const group = getEffectiveReferenceGroup(
+        call.start,
+        enteredGroup,
+        containers,
+    );
     const reference = {
+        details: "",
         end: call.end,
         group,
         name: decodeReferenceAttribute(
@@ -2549,6 +2850,7 @@ function buildExistingSource(
         rawTemplate: call.raw,
         referenceEnd: reference.end,
         referenceKind: "reference" as const,
+        referenceDetails: reference.details,
         referenceName: reference.name,
         referenceStart: reference.start,
         sectionIds: [],
@@ -2586,6 +2888,7 @@ function buildNonStandardSource(
         rawTemplate: reference.raw,
         referenceEnd: reference.end,
         referenceKind: "reference" as const,
+        referenceDetails: reference.details,
         referenceName: reference.name,
         referenceStart: reference.start,
         sectionIds: [],
@@ -2688,20 +2991,22 @@ function buildReflistContainer(
 }
 
 /**
- * Gets the group inherited from the enclosing references container.
+ * Resolves the Cite group, including coercion inside a references container.
  *
  * @param index - Source index.
+ * @param enteredGroup - Raw group from the reference tag or R call.
  * @param containers - Containers value.
  * @returns Resulting text.
  */
-function getContainerGroup(
+function getEffectiveReferenceGroup(
     index: number,
+    enteredGroup: string,
     containers: ReferenceContainer[],
 ): string {
     const container = containers.find(
         (candidate) => index >= candidate.start && index < candidate.end,
     );
-    return container?.group || "";
+    return container?.group ?? decodeReferenceAttribute(enteredGroup);
 }
 
 function getDraftValue(draft: SourceDraft, name: string): string {
@@ -2746,8 +3051,12 @@ function setsIntersect(left: Set<string>, right: Set<string>): boolean {
  * Escapes a source-manager name using its historical entity policy.
  *
  * @param value - Value to process.
- * @returns Escaped name using the historical entity policy.
+ * @returns Escaped decoded name without reinterpreting literal entity text.
  */
 function escapeSourceReferenceName(value: string): string {
-    return escapeReferenceName(value, { caseInsensitiveAmpEntity: true });
+    return escapeReferenceDetails(value);
+}
+
+function formatSourceReferenceGroup(value: string): string {
+    return value === "" ? "" : ` group="${escapeReferenceDetails(value)}"`;
 }

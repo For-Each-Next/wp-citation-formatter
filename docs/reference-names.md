@@ -5,6 +5,25 @@ dates, source identities, and part locators. Structured HTML comments can
 override one component or exclude a field without changing displayed citation
 text.
 
+## Named footnote reuse
+
+An existing footnote is matched by its name and reference group together.
+Forward calls such as `<ref name="Book" />` can appear before their full
+definition. Formatting updates the definition and its reuses together, including
+native sub-references with different `details` values. Empty `group=""` in prose
+belongs to the default group; list-defined references use their enclosing list's
+group.
+
+Names and groups are compared after one HTML entity decoding pass, so `é` and
+`&eacute;` identify the same value. An escaped literal such as `&amp;eacute;`
+remains distinct through formatting and source reuse.
+
+Repeated identical full definitions share one source entry. Editing that source
+updates identical copies together. Conflicting full definitions are kept in
+place during formatting so Cite can continue reporting the conflict. See
+[Help:Cite on multiple uses of a footnote](https://www.mediawiki.org/wiki/Help:Cite#Multiple_uses_of_the_same_footnote)
+and [sub-referencing](https://meta.wikimedia.org/wiki/WMDE_Technical_Wishes/Sub-referencing).
+
 ## Name aliases
 
 For a non-Latin author or organization name, an HTML comment beginning with `#`
