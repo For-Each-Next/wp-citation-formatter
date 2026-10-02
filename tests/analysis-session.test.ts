@@ -6,7 +6,7 @@ import test from "node:test";
 import {
     appendAnalysisUndo,
     getAnalysisUndoText,
-} from "../src/features/analysis-session.ts";
+} from "../src/features/source-manager/analysis-session.ts";
 
 test("groups consecutive analysis writes into one session undo", () => {
     const first = appendAnalysisUndo(null, "original", "first");

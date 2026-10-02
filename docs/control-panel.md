@@ -1,8 +1,15 @@
 # Control panel
 
+> **Required interaction guidance:** Follow the [Codex types and order of buttons](https://doc.wikimedia.org/codex/latest/style-guide/using-links-and-buttons.html#types-and-order-of-buttons)
+> when changing UI. Use neutral cancellation, at most one primary progressive action
+> per group, normal secondary actions, and quiet tertiary actions. Put the primary
+> at the reading end of horizontal flow groups (right in LTR, left in RTL), and at
+> the top of stacked groups. Use `spacing-75` (12px) between grouped actions.
+
 Open an article in Edit source or VisualEditor source mode, then launch
 Citation Formatter from the page actions, toolbox, or floating launcher.
-The panel keeps citation work in the source editor.
+The panel keeps citation work in the source editor. Documentation images use a
+1024 × 768 viewport at device pixel ratio 1.
 
 ## Add a source
 
@@ -41,7 +48,7 @@ until the next source replaces it.
 
 ![Sources with sub-reference occurrences](images/sub-reference-sources.png)
 
-[View the mobile source list](images/sub-reference-sources-mobile.png).
+[View a filtered source list](images/sub-reference-filtered.png).
 
 The main **Use source** action inserts its main reference. Hold **Ctrl** or
 **Command** while clicking it to open **Use with details** and add a page,
@@ -54,7 +61,7 @@ a sub-reference row turns its matching uses into ordinary main-reference uses.
 
 ![Use with details dialog](images/reference-details.png)
 
-[View the mobile details dialog](images/reference-details-mobile.png).
+[View a details draft and its wikitext preview](images/reference-details-filled.png).
 
 ## Format and review
 
@@ -81,11 +88,11 @@ protecting later unrelated edits.
 ## Interaction and layout
 
 The panel uses Codex fields with accessible labels and visible validation.
-Each button group has one primary action; secondary actions use neutral
+Each button group has at most one primary progressive action; secondary actions use neutral
 buttons, and less frequent actions use quiet buttons. Individual source and
 parameter actions use compact icon buttons with translated tooltips and
-accessible labels. List controls and dialog footers use text buttons, with cancel
-before the primary action in left-to-right interfaces. On narrow screens, footer
+accessible labels. List controls and dialog footers use text buttons, with cancellation
+before the primary action at the reading end of horizontal groups in both left-to-right and right-to-left interfaces. On narrow screens, footer
 buttons stack with the primary action first. The reference-name preview shows
 its populated components together, without separate labels or empty placeholders.
 Source details and wikitext previews wrap or scroll within the dialog rather than

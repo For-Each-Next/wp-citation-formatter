@@ -1,0 +1,46 @@
+.cf-citation-launcher {
+    background-color: var(--background-color-progressive, #36c);
+    border: 1px solid var(--border-color-progressive, #36c);
+    border-radius: var(--border-radius-base, 2px);
+    box-shadow: 0 2px 8px rgb(0 0 0 / 25%);
+    color: var(--color-inverted-fixed, #fff);
+    cursor: pointer;
+    font: inherit;
+    font-weight: 700;
+    inset-block-end: max(1rem, env(safe-area-inset-bottom));
+    inset-inline-end: max(1rem, env(safe-area-inset-right));
+    min-height: 2rem;
+    padding: 0.3125rem 0.75rem;
+    position: fixed;
+    z-index: 90;
+}
+
+.cf-citation-launcher:hover {
+    background-color: var(--background-color-progressive--hover, #3056a9);
+    border-color: var(--border-color-progressive--hover, #3056a9);
+}
+
+.cf-citation-launcher:active {
+    background-color: var(--background-color-progressive--active, #233566);
+    border-color: var(--border-color-progressive--active, #233566);
+}
+
+.cf-citation-launcher:focus-visible {
+    outline: 2px solid var(--border-color-progressive, #36c);
+    outline-offset: 2px;
+}
+
+html[dir="rtl"] .cf-citation-launcher {
+    inset-inline-end: max(1rem, env(safe-area-inset-left));
+}
+
+@media (max-width: 639px) {
+    .cf-citation-launcher {
+        inset-block-end: max(0.75rem, env(safe-area-inset-bottom));
+        inset-inline-end: max(0.75rem, env(safe-area-inset-right));
+    }
+
+    html[dir="rtl"] .cf-citation-launcher {
+        inset-inline-end: max(0.75rem, env(safe-area-inset-left));
+    }
+}

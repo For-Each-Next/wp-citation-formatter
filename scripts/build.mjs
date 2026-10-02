@@ -22,27 +22,28 @@ if (notice.includes("*/")) {
 }
 
 const assetDefinitions = {
-    __CITATION_FORMATTER_STYLES__: "src/features/styles.css",
+    __CITATION_FORMATTER_EDITOR_STYLES__: "src/features/editor/command.css",
+    __CITATION_FORMATTER_STYLES__: "src/features/source-manager/styles.css",
     __CITATION_FORMATTER_MAIN_DIALOG_TEMPLATE__:
-        "src/features/dialogs/main-dialog.vue",
+        "src/features/source-manager/dialogs/main-dialog.vue",
     __CITATION_FORMATTER_MAIN_DIALOG_STYLES__:
-        "src/features/dialogs/main-dialog.css",
+        "src/features/source-manager/dialogs/main-dialog.css",
     __CITATION_FORMATTER_DRAFT_DIALOG_TEMPLATE__:
-        "src/features/dialogs/draft-dialog.vue",
+        "src/features/source-manager/dialogs/draft-dialog.vue",
     __CITATION_FORMATTER_DRAFT_DIALOG_STYLES__:
-        "src/features/dialogs/draft-dialog.css",
+        "src/features/source-manager/dialogs/draft-dialog.css",
     __CITATION_FORMATTER_PARAMETER_ALIAS_DIALOG_TEMPLATE__:
-        "src/features/dialogs/parameter-alias-dialog.vue",
+        "src/features/source-manager/dialogs/parameter-alias-dialog.vue",
     __CITATION_FORMATTER_PARAMETER_ALIAS_DIALOG_STYLES__:
-        "src/features/dialogs/parameter-alias-dialog.css",
+        "src/features/source-manager/dialogs/parameter-alias-dialog.css",
     __CITATION_FORMATTER_TOOL_DIALOG_TEMPLATE__:
-        "src/features/dialogs/tool-dialog.vue",
+        "src/features/source-manager/dialogs/tool-dialog.vue",
     __CITATION_FORMATTER_TOOL_DIALOG_STYLES__:
-        "src/features/dialogs/tool-dialog.css",
+        "src/features/source-manager/dialogs/tool-dialog.css",
     __CITATION_FORMATTER_CLOSE_DIALOG_TEMPLATE__:
-        "src/features/dialogs/close-confirmation-dialog.vue",
+        "src/features/source-manager/dialogs/close-confirmation-dialog.vue",
     __CITATION_FORMATTER_CLOSE_DIALOG_STYLES__:
-        "src/features/dialogs/close-confirmation-dialog.css",
+        "src/features/source-manager/dialogs/close-confirmation-dialog.css",
 };
 async function prepareAsset(relativePath, readableAssets) {
     const filename = join(root, relativePath);

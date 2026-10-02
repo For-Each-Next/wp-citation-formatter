@@ -11,6 +11,7 @@ export default defineConfig({
     reporter: process.env.CI ? "github" : "list",
     use: {
         ...devices["Desktop Chrome"],
+        deviceScaleFactor: 1,
         serviceWorkers: "block",
         ...(process.env.PLAYWRIGHT_CHROMIUM_EXECUTABLE == null
             ? {}

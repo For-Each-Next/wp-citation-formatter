@@ -18,8 +18,8 @@ import {
 } from "../platform/mediawiki/template-data.ts";
 import { resolveCitationWikiLink } from "../platform/mediawiki/wiki-link.ts";
 import { createTemplateNameContextResolver } from "../platform/mediawiki/namespaces.ts";
-import * as citationEditor from "../features/editor.ts";
-import * as sourceManagerUi from "../features/source-manager.ts";
+import * as citationEditor from "../features/editor/command.ts";
+import * as sourceManagerUi from "../features/source-manager/controller.ts";
 import { createCs1ReviewWorkflow } from "./workflows/cs1-review.ts";
 import { initializeCitationFormatterI18n, msg } from "../i18n/index.ts";
 import {

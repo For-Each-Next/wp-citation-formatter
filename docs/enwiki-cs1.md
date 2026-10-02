@@ -1,5 +1,11 @@
 # English Wikipedia CS1 Maintenance
 
+> **Required interaction guidance:** Follow the [Codex types and order of buttons](https://doc.wikimedia.org/codex/latest/style-guide/using-links-and-buttons.html#types-and-order-of-buttons)
+> when changing UI. Use neutral cancellation, at most one primary progressive action
+> per group, normal secondary actions, and quiet tertiary actions. Put the primary
+> at the reading end of horizontal flow groups (right in LTR, left in RTL), and at
+> the top of stacked groups. Use `spacing-75` (12px) between grouped actions.
+
 Use the shared [CS1 data maintenance guide][1] for the automated TemplateData
 refresh, comparison requests, Lua review, and diff checks. This file records
 the English Wikipedia sources and interpretation rules.

@@ -42,8 +42,8 @@ import {
     normalizeTemplateName,
     SUPPORTED_CITATION_TEMPLATES,
 } from "../src/domain/templates.ts";
-import { formatSourceUsageTitle } from "../src/features/source-list-presentation.ts";
-import { buildSourceSectionSelectors } from "../src/features/source-manager.ts";
+import { formatSourceUsageTitle } from "../src/features/source-manager/list-presentation.ts";
+import { buildSourceSectionSelectors } from "../src/features/source-manager/controller.ts";
 import { buildCs1CheckWikitext } from "../src/platform/mediawiki/cs1-check.ts";
 import { decodeReferenceDetailsAttribute } from "../src/domain/ref-attributes.ts";
 import { wikitext } from "../src/domain/parsing/index.ts";

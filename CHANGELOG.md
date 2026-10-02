@@ -1,6 +1,17 @@
 # Changelog
 
-## Unreleased
+## [0.2.1] - 2026-10-02
+
+- Group editor commands and source-manager state, dialogs, and styles by feature
+  ownership, with explicit module names and co-located templates.
+- Keep visual and keyboard action order aligned when dialogs change between
+  horizontal and stacked layouts. Dispose the viewport listener with the manager.
+- Align cancellation, stacked reference-detail actions, warning messages, and
+  action spacing with the Codex button hierarchy.
+- Refresh every documentation screenshot at a 1024 × 768 viewport and provide
+  `npm run screenshots` with offline fixtures.
+- Shorten the README and document installation, architecture, and Codex
+  interaction rules in focused contributor guides.
 
 ## 0.2.0 - 2026-10-02
 

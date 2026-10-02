@@ -17,7 +17,7 @@ import {
     createSourceValidationMessages,
     sourceAnalysisMessages,
     sourceValidationMessages,
-} from "../src/features/source-messages.ts";
+} from "../src/features/source-manager/messages.ts";
 
 function placeholders(message: string): string[] {
     return [...message.matchAll(/(?<!\{)\{([A-Za-z][A-Za-z0-9]*)\}(?!\})/gu)]

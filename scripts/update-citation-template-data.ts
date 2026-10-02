@@ -26,7 +26,7 @@ import {
 const BATCH_SIZE = 20;
 const OUTPUT_DIRECTORY = fileURLToPath(
     new URL(
-        "../src/config/" + "citation-template-data/generated/",
+        "../src/config" + "citation-template-data/generated/",
         import.meta.url,
     ),
 );

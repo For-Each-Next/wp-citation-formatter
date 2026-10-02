@@ -16,7 +16,7 @@ import type { CitationTemplateDataMap } from "../src/domain/types.ts";
 import {
     createOpenCitationFormatterDialog,
     type SourceManagerOptions,
-} from "../src/features/source-manager.ts";
+} from "../src/features/source-manager/controller.ts";
 import {
     buildCs1CheckWikitext,
     requestCs1WikitextCheck,
@@ -27,7 +27,7 @@ import type {
     CodexComponents,
     ResourceLoaderRequire,
     VueModule,
-} from "../src/features/codex.ts";
+} from "../src/features/source-manager/codex.ts";
 import * as editBox from "../src/platform/edit-box/index.ts";
 import type { Logger } from "../src/shared/logging/index.ts";
 import type { ActionNotification } from "../src/platform/mediawiki/notifications/index.ts";
@@ -35,7 +35,7 @@ import * as templateNames from "../src/domain/templates.ts";
 import type {
     SourceTableGroup,
     SourceTableRow,
-} from "../src/features/source-list-presentation.ts";
+} from "../src/features/source-manager/list-presentation.ts";
 import { cdxIconMerge, type Icon } from "@wikimedia/codex-icons";
 
 const executionTimerFinishes: string[] = [];
@@ -1675,6 +1675,7 @@ function createNativeTextarea(value: string): HTMLTextAreaElement {
 }
 
 const BROWSER_GLOBAL_NAMES = [
+    "window",
     "DOMParser",
     "document",
     "mw",
@@ -1795,6 +1796,15 @@ function installBrowserGlobals(
 ): void {
     const require = ((module: string) =>
         module === "vue" ? Vue : Codex) as ResourceLoaderRequire;
+    globals.window = {
+        matchMedia() {
+            return {
+                matches: false,
+                addEventListener() {},
+                removeEventListener() {},
+            };
+        },
+    };
     globals.DOMParser = FakeDomParser;
     globals.document = createFakeDocument();
     globals.requestAnimationFrame = (callback: () => void) => {

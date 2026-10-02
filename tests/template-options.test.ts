@@ -10,7 +10,7 @@ import {
     CITATION_TEMPLATE_DEFINITIONS,
     CITATION_TEMPLATE_OPTIONS,
     getSourceDraftTemplateOptions,
-} from "../src/features/citation-template-options.ts";
+} from "../src/features/source-manager/template-options.ts";
 import { cdxIconDie, cdxIconNewspaper } from "@wikimedia/codex-icons";
 
 test("orders citation templates by group and alphabetically", () => {

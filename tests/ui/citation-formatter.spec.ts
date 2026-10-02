@@ -5,7 +5,7 @@ import { build } from "esbuild";
 import zhHansCatalog from "../../src/i18n/zh-Hans.json" with { type: "json" };
 import zhHantCatalog from "../../src/i18n/zh-Hant.json" with { type: "json" };
 
-const root = fileURLToPath(new URL("../../", import.meta.url));
+const root = fileURLToPath(new URL("../..", import.meta.url));
 const initialSource = [
     "== Background ==",
     'Text.<ref name="sample">{{Cite web|url=https://example.test/source|title=Sample source|last=Nguyen|date=2024-05-20}}</ref>',
@@ -742,6 +742,14 @@ for (const { direction, width } of [
             (left, right) => left.top - right.top,
         );
         expect(sorted[0].name).toBe("Format citations");
+        expect(positions.map((action) => action.name)).toEqual(
+            sorted.map((action) => action.name),
+        );
+        await primary.focus();
+        await page.keyboard.press("Tab");
+        await expect(buttons.nth(1)).toBeFocused();
+        await page.keyboard.press("Tab");
+        await expect(buttons.nth(2)).toBeFocused();
         for (const position of positions) {
             expect(position.left).toBeGreaterThanOrEqual(0);
             expect(position.right).toBeLessThanOrEqual(width);
@@ -749,6 +757,49 @@ for (const { direction, width } of [
         expect(
             await page.evaluate(() => document.documentElement.scrollWidth),
         ).toBeLessThanOrEqual(width);
+        await dialog
+            .getByRole("tab", { name: "View sources (2)", exact: true })
+            .click();
+        await dialog
+            .getByRole("button", { name: "Use source", exact: true })
+            .first()
+            .dispatchEvent("click", { ctrlKey: true });
+        const details = page.getByRole("dialog", {
+            name: "Use with details",
+            exact: true,
+        });
+        const detailsPrimary = details.getByRole("button", {
+            name: "Use source",
+            exact: true,
+        });
+        const cancel = details
+            .locator(".cf-source-manager__footer-actions")
+            .getByRole("button", { name: "Cancel", exact: true });
+        await expect(detailsPrimary).toBeVisible();
+        await expect(cancel).toHaveClass(/cdx-button--action-default/);
+        expect((await detailsPrimary.boundingBox())!.y).toBeLessThan(
+            (await cancel.boundingBox())!.y,
+        );
+        expect(
+            await page.evaluate(() => document.documentElement.scrollWidth),
+        ).toBeLessThanOrEqual(width);
+        await detailsPrimary.focus();
+        await page.keyboard.press("Tab");
+        await expect(cancel).toBeFocused();
+        await page.setViewportSize({ width: 1024, height: 768 });
+        await expect(
+            details
+                .locator(".cf-source-manager__footer-actions > button")
+                .first(),
+        ).toHaveText("Cancel");
+        await expect(cancel).toBeFocused();
+        await cancel.focus();
+        await page.keyboard.press("Tab");
+        await expect(detailsPrimary).toBeFocused();
+        const cancelBox = (await cancel.boundingBox())!;
+        const primaryBox = (await detailsPrimary.boundingBox())!;
+        if (direction === "ltr") expect(cancelBox.x).toBeLessThan(primaryBox.x);
+        else expect(cancelBox.x).toBeGreaterThan(primaryBox.x);
         expect(errors).toEqual([]);
     });
 }
@@ -898,8 +949,10 @@ test("ignores other content models", async ({ page }) => {
 test("captures the source and tools panels for visual review", async ({
     page,
 }) => {
-    const captureScreenshots = process.env.CITATION_UI_SCREENSHOTS === "1";
-    await page.setViewportSize({ width: 1280, height: 720 });
+    const captureScreenshots =
+        process.env.DOCUMENTATION_SCREENSHOTS === "1" ||
+        process.env.CITATION_UI_SCREENSHOTS === "1";
+    await page.setViewportSize({ width: 1024, height: 768 });
     const errors = await mountGadget(
         page,
         captureScreenshots
@@ -926,32 +979,71 @@ test("captures the source and tools panels for visual review", async ({
     expect(manualSelect!.width).toBeCloseTo(manualSection!.width, 0);
     if (!captureScreenshots) return;
     await mkdir(`${root}docs/images`, { recursive: true });
+    expect(await page.evaluate(() => window.devicePixelRatio)).toBe(1);
     const dialog = page.getByRole("dialog");
     const sourcesTab = dialog.getByRole("tab", {
         name: zhHansCatalog["tabs.viewSources"].split("{count}")[0],
     });
-    await dialog.screenshot({
+    await expect(
+        page.locator(
+            ".cdx-dialog-fade-enter-active, .cdx-dialog-fade-leave-active",
+        ),
+    ).toHaveCount(0);
+    await page.screenshot({
         path: `${root}docs/images/add-source.png`,
         animations: "disabled",
     });
     await sourcesTab.click();
-    await dialog.screenshot({
+    await expect(
+        page.locator(
+            ".cdx-dialog-fade-enter-active, .cdx-dialog-fade-leave-active",
+        ),
+    ).toHaveCount(0);
+    await page.screenshot({
         path: `${root}docs/images/sources.png`,
         animations: "disabled",
     });
     await dialog
         .getByRole("tab", { name: zhHansCatalog["tabs.tools"], exact: true })
         .click();
-    await dialog.screenshot({
+    await expect(
+        page.locator(
+            ".cdx-dialog-fade-enter-active, .cdx-dialog-fade-leave-active",
+        ),
+    ).toHaveCount(0);
+    await page.screenshot({
         path: `${root}docs/images/tools.png`,
         animations: "disabled",
     });
-    await page.setViewportSize({ width: 390, height: 844 });
-    await dialog.screenshot({
-        path: `${root}docs/images/tools-mobile.png`,
+
+    await dialog
+        .getByRole("button", {
+            name: zhHansCatalog["tools.analyze"],
+            exact: true,
+        })
+        .click();
+    const reviewDialog = page.getByRole("dialog", {
+        name: zhHansCatalog["analysis.title"],
+        exact: true,
+    });
+    await expect(reviewDialog).toBeVisible();
+    await expect(
+        page.locator(
+            ".cdx-dialog-fade-enter-active, .cdx-dialog-fade-leave-active",
+        ),
+    ).toHaveCount(0);
+    await page.screenshot({
+        path: `${root}docs/images/tools-review.png`,
         animations: "disabled",
     });
-    await page.setViewportSize({ width: 1280, height: 720 });
+    await reviewDialog
+        .locator(".cdx-dialog__footer")
+        .getByRole("button", {
+            name: zhHansCatalog["common.close"],
+            exact: true,
+        })
+        .click();
+    await page.setViewportSize({ width: 1024, height: 768 });
     await sourcesTab.click();
     await dialog
         .getByRole("button", {
@@ -960,30 +1052,39 @@ test("captures the source and tools panels for visual review", async ({
         })
         .first()
         .click();
+    await expect(
+        page.locator(
+            ".cdx-dialog-fade-enter-active, .cdx-dialog-fade-leave-active",
+        ),
+    ).toHaveCount(0);
+    await page.screenshot({
+        path: `${root}docs/images/edit-source.png`,
+        animations: "disabled",
+    });
+
     await page
         .getByRole("dialog", {
             name: zhHansCatalog["draft.editSourceTitle"],
             exact: true,
         })
-        .screenshot({
-            path: `${root}docs/images/edit-source.png`,
-            animations: "disabled",
+        .locator(".cdx-dialog__body")
+        .evaluate((body) => {
+            body.scrollTop = body.scrollHeight;
         });
-    await page.setViewportSize({ width: 390, height: 844 });
-    await page
-        .getByRole("dialog", {
-            name: zhHansCatalog["draft.editSourceTitle"],
-            exact: true,
-        })
-        .screenshot({
-            path: `${root}docs/images/edit-source-mobile.png`,
-            animations: "disabled",
-        });
+    await expect(
+        page.locator(
+            ".cdx-dialog-fade-enter-active, .cdx-dialog-fade-leave-active",
+        ),
+    ).toHaveCount(0);
+    await page.screenshot({
+        path: `${root}docs/images/edit-source-fields.png`,
+        animations: "disabled",
+    });
     expect(errors).toEqual([]);
 
     const detailsPage = await page.context().newPage();
     try {
-        await detailsPage.setViewportSize({ width: 1280, height: 720 });
+        await detailsPage.setViewportSize({ width: 1024, height: 768 });
         const detailsErrors = await mountGadget(detailsPage, {
             source: await readFile(
                 `${root}tests/fixtures/mother3-sub-references.wikitext`,
@@ -1012,21 +1113,31 @@ test("captures the source and tools panels for visual review", async ({
             });
         }
         await showSourceTable();
-        await detailsMain.screenshot({
+        await expect(
+            detailsPage.locator(
+                ".cdx-dialog-fade-enter-active, .cdx-dialog-fade-leave-active",
+            ),
+        ).toHaveCount(0);
+        await detailsPage.screenshot({
             path: `${root}docs/images/sub-reference-sources.png`,
             animations: "disabled",
         });
-        await detailsPage.setViewportSize({ width: 390, height: 844 });
+
         const detailsFilter = detailsMain.getByPlaceholder(
             zhHansCatalog["lookup.filterKeywordPlaceholder"],
         );
         await detailsFilter.fill("Hobonichi2006");
         await showSourceTable();
-        await detailsMain.screenshot({
-            path: `${root}docs/images/sub-reference-sources-mobile.png`,
+        await expect(
+            detailsPage.locator(
+                ".cdx-dialog-fade-enter-active, .cdx-dialog-fade-leave-active",
+            ),
+        ).toHaveCount(0);
+        await detailsPage.screenshot({
+            path: `${root}docs/images/sub-reference-filtered.png`,
             animations: "disabled",
         });
-        await detailsPage.setViewportSize({ width: 1280, height: 720 });
+        await detailsPage.setViewportSize({ width: 1024, height: 768 });
         await detailsFilter.fill("");
         await detailsMain
             .getByRole("button", {
@@ -1039,13 +1150,30 @@ test("captures the source and tools panels for visual review", async ({
             name: zhHansCatalog["lookup.useWithDetails"],
             exact: true,
         });
-        await detailsDialog.screenshot({
+        await expect(detailsDialog).toBeVisible();
+        await expect(
+            detailsPage.locator(
+                ".cdx-dialog-fade-enter-active, .cdx-dialog-fade-leave-active",
+            ),
+        ).toHaveCount(0);
+        await detailsPage.screenshot({
             path: `${root}docs/images/reference-details.png`,
             animations: "disabled",
         });
-        await detailsPage.setViewportSize({ width: 390, height: 844 });
-        await detailsDialog.screenshot({
-            path: `${root}docs/images/reference-details-mobile.png`,
+
+        await detailsDialog
+            .getByRole("textbox", {
+                name: zhHansCatalog["lookup.referenceDetails"],
+                exact: true,
+            })
+            .fill("p. 23 {{lang|en|Chapter 2}}");
+        await expect(
+            detailsPage.locator(
+                ".cdx-dialog-fade-enter-active, .cdx-dialog-fade-leave-active",
+            ),
+        ).toHaveCount(0);
+        await detailsPage.screenshot({
+            path: `${root}docs/images/reference-details-filled.png`,
             animations: "disabled",
         });
         expect(detailsErrors).toEqual([]);

@@ -1,8 +1,0 @@
-.cf-source-manager__confirmation-dialog.cdx-dialog {
-    max-width: 36rem;
-}
-
-.cf-source-manager__confirmation-dialog p {
-    line-height: var(--line-height-medium, 1.6);
-    margin: 0;
-}

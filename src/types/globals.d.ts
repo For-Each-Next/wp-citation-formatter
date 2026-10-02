@@ -8,15 +8,18 @@ import type {
     MainDialogContext,
     ParameterAliasContext,
     ToolDialogContext,
-} from "../features/dialogs/index.ts";
+} from "../features/source-manager/dialogs.ts";
 
-type TemplateContext = CloseDialogContext &
+type TemplateContext = {
+    getDialogActionOrder(actions: string[]): string[];
+} & CloseDialogContext &
     DraftDialogContext &
     MainDialogContext &
     ParameterAliasContext &
     ToolDialogContext;
 
 declare global {
+    const __CITATION_FORMATTER_EDITOR_STYLES__: string;
     const __CITATION_FORMATTER_STYLES__: string;
     const __CITATION_FORMATTER_MAIN_DIALOG_TEMPLATE__: string;
     const __CITATION_FORMATTER_MAIN_DIALOG_STYLES__: string;

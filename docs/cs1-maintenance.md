@@ -1,5 +1,11 @@
 # CS1 Data Maintenance
 
+> **Required interaction guidance:** Follow the [Codex types and order of buttons](https://doc.wikimedia.org/codex/latest/style-guide/using-links-and-buttons.html#types-and-order-of-buttons)
+> when changing UI. Use neutral cancellation, at most one primary progressive action
+> per group, normal secondary actions, and quiet tertiary actions. Put the primary
+> at the reading end of horizontal flow groups (right in LTR, left in RTL), and at
+> the top of stacked groups. Use `spacing-75` (12px) between grouped actions.
+
 This guide defines the workflow shared by Citation Formatter's English and
 Chinese Wikipedia metadata and validation refreshes. Read it together with the
 site-specific guide:

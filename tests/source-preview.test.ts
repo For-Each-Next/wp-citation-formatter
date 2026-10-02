@@ -3,7 +3,7 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 
-import { buildSourcePreview } from "../src/features/source-preview.ts";
+import { buildSourcePreview } from "../src/features/source-manager/preview.ts";
 
 test("segments parameter names and alias comments", () => {
     const source =
