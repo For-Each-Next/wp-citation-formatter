@@ -1,3 +1,12 @@
+/**
+ * @file src/domain/validation/enwiki.ts
+ * Purpose: src / domain / validation / enwiki module.
+ *
+ * Table of contents:
+ * 1. Imports
+ * 2. Constants and state
+ */
+
 import type { CitationValidationConfig } from "./types.ts";
 
 /** English Wikipedia CS1 validation differences. */

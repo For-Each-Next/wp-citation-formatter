@@ -1,4 +1,31 @@
-/** Wikitable range queries and local structure parsing. */
+/**
+ * @file src/domain/parsing/tables.ts
+ * Purpose: Wikitable range queries and local structure parsing.
+ *
+ * Table of contents:
+ * 1. Imports
+ * 2. WikitableRange
+ * 3. ParsedWikitableCaption
+ * 4. ParsedWikitableCell
+ * 5. ParsedWikitableRow
+ * 6. ParsedWikitable
+ * 7. SourceLine
+ * 8. TableToken
+ * 9. RowBuilder
+ * 10. ParsedTablePayload
+ * 11. findWikitableRanges
+ * 12. parseWikitable
+ * 13. scanTable
+ * 14. readCellTokens
+ * 15. buildCaption
+ * 16. buildRow
+ * 17. buildCell
+ * 18. parseTablePayload
+ * 19. readLines
+ * 20. skipHorizontalSpace
+ * 21. trimTrailingLineBreak
+ */
+
 import {
     findOpaqueRanges,
     isOffsetInRanges,

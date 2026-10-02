@@ -1,5 +1,18 @@
 /**
- * Orchestrates live CS1 checks for source-review workflows.
+ * @file src/app/workflows/cs1-review.ts
+ * Purpose: Orchestrates live CS1 checks for source-review workflows.
+ *
+ * Table of contents:
+ * 1. Imports
+ * 2. Cs1CheckResult
+ * 3. Cs1ReviewDependencies
+ * 4. Exports
+ * 5. createCs1ReviewWorkflow
+ * 6. checkArticleSources
+ * 7. checkNewSourceDraft
+ * 8. checkExistingSourceDraft
+ * 9. restoreCheckedSource
+ * 10. mapCs1CheckedSources
  */
 
 import {

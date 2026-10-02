@@ -1,5 +1,16 @@
 /**
- * Fetches raw page citation metadata from Wikimedia Citoid.
+ * @file src/platform/citoid/index.ts
+ * Purpose: Fetches raw page citation metadata from Wikimedia Citoid.
+ *
+ * Table of contents:
+ * 1. Constants and state
+ * 2. CitationMetadata
+ * 3. CitationMetadataOptions
+ * 4. CitoidRequestError
+ * 5. fetchCitationMetadata
+ * 6. buildCitoidUrl
+ * 7. getFirstCitation
+ * 8. isCitationMetadata
  */
 
 const CITOID_ENDPOINT = "/api/rest_v1/data/citation/zotero/";

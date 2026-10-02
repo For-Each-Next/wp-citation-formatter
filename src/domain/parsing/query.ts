@@ -1,4 +1,43 @@
-/** Lazy, construct-focused wikitext queries and builders. */
+/**
+ * @file src/domain/parsing/query.ts
+ * Purpose: Lazy, construct-focused wikitext queries and builders.
+ *
+ * Table of contents:
+ * 1. Imports
+ * 2. WikitextQueryOptions
+ * 3. WikitextCollection
+ * 4. WikitextNamedCollection
+ * 5. WikitextTagAttributeFilter
+ * 6. WikitextTemplateParameterFilter
+ * 7. WikitextReferenceCollection
+ * 8. ParsedWikitextTag
+ * 9. ParsedWikitextTemplate
+ * 10. ParsedWikitextSource
+ * 11. NamedTagCollection
+ * 12. NamedTemplateCollection
+ * 13. WikitextTagCollection
+ * 14. WikitextTemplateCollection
+ * 15. WikitextTemplateStatic
+ * 16. WikitextTagStatic
+ * 17. WikitextQuery
+ * 18. WikitextFactory
+ * 19. queryWikitext
+ * 20. createCollection
+ * 21. createTemplateCollection
+ * 22. hasTemplateParameters
+ * 23. createTagCollection
+ * 24. hasTagAttributes
+ * 25. createReferenceCollection
+ * 26. parseSource
+ * 27. parseTemplateSource
+ * 28. findCompleteTag
+ * 29. offsetParsedTag
+ * 30. getTables
+ * 31. Constants and state
+ * 32. Initialization and execution
+ * 33. parseTagSource
+ * 34. Exports
+ */
 
 import { findWikitextComments, type WikitextComment } from "./comments.ts";
 import { findWikilinkRanges, type WikilinkRange } from "./links.ts";

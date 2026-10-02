@@ -1,4 +1,30 @@
-/** Tests article-level list-defined-reference conversion. */
+/**
+ * @file tests/formatter.test.ts
+ * Purpose: Tests article-level list-defined-reference conversion.
+ *
+ * Table of contents:
+ * 1. Imports
+ * 2. Constants and state
+ * 3. Test scenarios
+ * 4. assertReferenceMarker
+ * 5. buildPaginatedInterviewSource
+ * 6. testLinkedShortCitation
+ * 7. testColonLinkedShortCitation
+ * 8. testCustomLinkedCitation
+ * 9. testProtectedLinkedCitationSources
+ * 10. testPlainReferenceNames
+ * 11. testDragonQuestPatterns
+ * 12. buildDragonQuestSource
+ * 13. assertDragonQuestResult
+ * 14. testSeaOfStarsPatterns
+ * 15. buildSeaOfStarsSource
+ * 16. buildVideoCall
+ * 17. buildPlatformCall
+ * 18. buildVideoDefinition
+ * 19. buildPlatformDefinition
+ * 20. assertSeaOfStarsResult
+ * 21. alphabeticTestSuffix
+ */
 
 import assert from "node:assert/strict";
 import test from "node:test";

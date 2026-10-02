@@ -1,4 +1,12 @@
-/** Encodes readable build assets without changing their string contents. */
+/**
+ * @file scripts/build-assets.ts
+ * Purpose: Encodes readable build assets without changing their string contents.
+ *
+ * Table of contents:
+ * 1. createReadableAssetLiteral
+ * 2. escapeTemplateContent
+ * 3. wrapCompactMarkup
+ */
 
 /**
  * Creates a JavaScript template literal for an embedded asset.

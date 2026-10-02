@@ -1,4 +1,21 @@
-/** Shared access to the active MediaWiki source edit box. */
+/**
+ * @file src/platform/mediawiki/edit-box/index.ts
+ * Purpose: Shared access to the active MediaWiki source edit box.
+ *
+ * Table of contents:
+ * 1. Imports
+ * 2. Exports
+ * 3. Constants and state
+ * 4. registerEditBoxHooks
+ * 5. getEditBox
+ * 6. createEditBox
+ * 7. writePreservingPosition
+ * 8. readEditBox
+ * 9. ActiveEditBox
+ * 10. replaceVisualEditorSelection
+ * 11. getEditBoxBackend
+ * 12. isEditBoxBackend
+ */
 
 import {
     findCodeMirror,
@@ -31,27 +48,6 @@ export type {
 
 const EDIT_BOX_SELECTOR = "#wpTextbox1";
 const EDIT_BOX_BACKEND_KEY = Symbol.for("mediawiki-gadgets.edit-box-backend");
-
-/** Registers enhanced operations for one native backing textarea. */
-export function registerEditBoxBackend(
-    element: HTMLTextAreaElement,
-    backend: EditBoxBackend,
-): () => void {
-    const target = element as unknown as Record<PropertyKey, unknown>;
-    const previous = target[EDIT_BOX_BACKEND_KEY];
-    target[EDIT_BOX_BACKEND_KEY] = backend;
-
-    return function unregisterEditBoxBackend(): void {
-        if (target[EDIT_BOX_BACKEND_KEY] !== backend) {
-            return;
-        }
-        if (previous == null) {
-            delete target[EDIT_BOX_BACKEND_KEY];
-            return;
-        }
-        target[EDIT_BOX_BACKEND_KEY] = previous;
-    };
-}
 
 /** Starts tracking MediaWiki CodeMirror instances. */
 export function registerEditBoxHooks(): void {

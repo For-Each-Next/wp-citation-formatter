@@ -1,4 +1,12 @@
-/** Tests site-aware CS1 draft validation. */
+/**
+ * @file tests/source-validation.test.ts
+ * Purpose: Tests site-aware CS1 draft validation.
+ *
+ * Table of contents:
+ * 1. Imports
+ * 2. getRowIndex
+ * 3. Test scenarios
+ */
 
 import assert from "node:assert/strict";
 import test from "node:test";

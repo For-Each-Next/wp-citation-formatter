@@ -1,5 +1,35 @@
 # Changelog
 
+<!-- toc:start -->
+
+## Contents
+
+- [\[Unreleased\]](#unreleased)
+- [\[0.2.2\] - 2026-10-03](#022---2026-10-03)
+- [\[0.2.1\] - 2026-10-02](#021---2026-10-02)
+- [0.2.0 - 2026-10-02](#020---2026-10-02)
+- [0.1.0 - 2026-10-01](#010---2026-10-01)
+
+<!-- toc:end -->
+
+## [Unreleased]
+
+## [0.2.2] - 2026-10-03
+
+- Publish verified minified and readable installation files with reviewed release
+  notes automatically after a version tag passes the shared validation pipeline.
+
+- Use native buttons for dialog launchers, including Space-key activation, and
+  load the host Codex styles before mounting editor actions.
+- Move editor adapters into `src/platform/mediawiki/edit-box/` and inject editor
+  operations through application contracts. Verify citation insertion with an
+  independently installed enhanced editor and its native submitted textarea.
+- Remove obsolete siteinfo star fields, the old screenshot environment alias,
+  unused provider-registration code, and an unused screenshot fixture.
+- Align minified and readable installation headers, add three equivalent user
+  guides with distribution links, and refresh screenshots from BanG Dream!
+  revision 94028176 with source attribution.
+
 ## [0.2.1] - 2026-10-02
 
 - Group editor commands and source-manager state, dialogs, and styles by feature

@@ -1,3 +1,11 @@
+/**
+ * @file src/features/source-manager/dialogs/parameter-alias-dialog.css
+ * Purpose: src / features / source manager / dialogs / parameter alias dialog module.
+ *
+ * Table of contents:
+ * 1. Styles and responsive rules
+ */
+
 .cf-source-manager__parameter-alias-dialog.cdx-dialog {
     max-width: 36rem;
 }

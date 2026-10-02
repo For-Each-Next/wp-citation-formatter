@@ -1,5 +1,33 @@
 /**
- * Loads TemplateData from a MediaWiki API in bounded, serial batches.
+ * @file src/platform/mediawiki/template-data/api.ts
+ * Purpose: Loads TemplateData from a MediaWiki API in bounded, serial batches.
+ *
+ * Table of contents:
+ * 1. Imports
+ * 2. Constants and state
+ * 3. MediaWikiTemplateDataApi
+ * 4. TemplateDataPage
+ * 5. TemplateDataPageMap
+ * 6. TemplateDataLoadOptions
+ * 7. ApiTitleMapping
+ * 8. loadTemplateData
+ * 9. loadTemplateDataBatch
+ * 10. parseTemplateDataResponse
+ * 11. parseTemplateDataPage
+ * 12. normalizeRequestedNames
+ * 13. getBatchSize
+ * 14. chunkNames
+ * 15. buildTitleMappings
+ * 16. parseTitleMapping
+ * 17. followTitleMappings
+ * 18. getApiPages
+ * 19. isApiPages
+ * 20. toTemplateTitle
+ * 21. stripTemplateNamespace
+ * 22. normalizeFullTitle
+ * 23. isSafeTemplateName
+ * 24. isApiFlag
+ * 25. isRecord
  */
 
 import {

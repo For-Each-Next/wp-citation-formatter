@@ -1,5 +1,178 @@
 /**
- * Cursor-aware source insertion and citation-field management dialog.
+ * @file src/features/source-manager/controller.ts
+ * Purpose: Cursor-aware source insertion and citation-field management dialog.
+ *
+ * Table of contents:
+ * 1. Imports
+ * 2. Exports
+ * 3. Constants and state
+ * 4. SourceManagerActionContext
+ * 5. SourceManagerActionServices
+ * 6. SourceManagerConfiguration
+ * 7. SourceDraftWriteResult
+ * 8. SourceDraftChangeSummary
+ * 9. LoadedCurrentCitationTemplateData
+ * 10. ArticleFormatPreparation
+ * 11. createOpenCitationFormatterDialog
+ * 12. mountSourceManager
+ * 13. createSourceManagerComponent
+ * 14. createSourceManagerContentBinding
+ * 15. createDraftRowKey
+ * 16. scheduleVisibleTextAreaAutosize
+ * 17. getCurrentWikiId
+ * 18. fetchArticleCs1Issues
+ * 19. getCurrentPageTitle
+ * 20. getCurrentCs1CheckOptions
+ * 21. createSourceManagerActions
+ * 22. createFormatterActions
+ * 23. prepareLoadedArticleFormat
+ * 24. formatPreparedArticle
+ * 25. applyArticleFormatResult
+ * 26. isScriptTitleMode
+ * 27. loadCurrentCitationTemplateData
+ * 28. loadCitationTemplateDataSafely
+ * 29. showArticleFormatResult
+ * 30. showActionNotification
+ * 31. notifyError
+ * 32. notifySuccess
+ * 33. notifyWarning
+ * 34. buildArticleFormatAttempt
+ * 35. isCurrentArticleFormatAttempt
+ * 36. formatArticleSummary
+ * 37. createNavigationActions
+ * 38. createManagerCloseActions
+ * 39. cancelAllSourceManagerChanges
+ * 40. createDraftPopupNavigationActions
+ * 41. createCloseConfirmationActions
+ * 42. createDraftActions
+ * 43. isUrlDraftParameter
+ * 44. getOpenableDraftUrl
+ * 45. buildDraftFieldLabel
+ * 46. getDraftFieldLabelText
+ * 47. createToolActions
+ * 48. createAnalysisToolActions
+ * 49. refreshAndOpenAnalysisTool
+ * 50. getInitialAnalysisTab
+ * 51. createAnalysisReplacementActions
+ * 52. applyAllSelectedAnalysisFindings
+ * 53. applyOneSelectedAnalysisFinding
+ * 54. createCheckerToolActions
+ * 55. selectAllAnalysisOccurrences
+ * 56. clearAnalysisSelection
+ * 57. getAnalysisReplacement
+ * 58. isAnalysisOccurrenceUnchanged
+ * 59. applySelectedAnalysisFindings
+ * 60. writeSelectedAnalysisFindings
+ * 61. buildAppliedAnalysisFindings
+ * 62. revertAnalysisFinding
+ * 63. notifyAnalysisReverted
+ * 64. notifyAnalysisRevertFailed
+ * 65. buildReverseAnalysisReplacements
+ * 66. findAnalysisTargetSource
+ * 67. findAnalysisTargetRow
+ * 68. isAnalysisTargetRow
+ * 69. clearCompletedAnalysisUndo
+ * 70. recordAnalysisUndo
+ * 71. recordSessionWrite
+ * 72. clearAnalysisUndo
+ * 73. restoreAnalysisSession
+ * 74. listSelectedAnalysisReplacements
+ * 75. listSelectedAnalysisFindings
+ * 76. listSelectedFindingReplacements
+ * 77. reviewCs1CheckedSource
+ * 78. openCs1ReviewSource
+ * 79. reviewNonCs1CheckedSource
+ * 80. openNonCs1ReviewSource
+ * 81. preloadCs1ReviewQueue
+ * 82. preloadNonCs1ReviewQueue
+ * 83. preloadCheckerSource
+ * 84. isDateAutofillParameter
+ * 85. isAccessDateParameter
+ * 86. isArchiveDateParameter
+ * 87. getDateAutofillTooltip
+ * 88. isLinkableDraftParameter
+ * 89. autofillDraftDate
+ * 90. autofillArchiveDate
+ * 91. notifyArchiveDateFilled
+ * 92. notifyArchiveSnapshotUnavailable
+ * 93. notifyArchiveFieldsFilled
+ * 94. linkDraftOrganization
+ * 95. reportArchiveCheckFailure
+ * 96. isCurrentDraftRow
+ * 97. getDraftRowValue
+ * 98. normalizeDraftName
+ * 99. formatLocalIsoDate
+ * 100. saveNewSourceDraft
+ * 101. validateNewSourceWithCs1
+ * 102. notifyNewSourceCs1Issues
+ * 103. notifyCheckerUnavailable
+ * 104. getNewSourceDraftForCs1
+ * 105. PartitionedCs1Issues
+ * 106. Cs1IssuePartitionContext
+ * 107. applyPartitionedNewSourceCs1Result
+ * 108. partitionCollisionMarkerCs1Issues
+ * 109. partitionCs1UnmappedMessages
+ * 110. partitionCs1CellErrors
+ * 111. partitionCs1Messages
+ * 112. isCollisionMarkerCs1Issue
+ * 113. canIgnoreUnsupportedParameterCategory
+ * 114. listCs1ResultMessages
+ * 115. checkNewSourceDraft
+ * 116. formatNewSourceCs1IssueMessage
+ * 117. applyNewSourceCs1Result
+ * 118. saveSourceDraft
+ * 119. finishAppliedSourceDraft
+ * 120. recheckAppliedCs1Draft
+ * 121. notifyCheckerNoIssues
+ * 122. applyCs1DraftRecheckResult
+ * 123. isCurrentAppliedDraft
+ * 124. updateAppliedCs1BatchResult
+ * 125. saveReviewedDraft
+ * 126. syncCs1BatchResults
+ * 127. showCheckerResults
+ * 128. writeSourceDraft
+ * 129. finishSourceDraftWrite
+ * 130. rebindAppliedDraft
+ * 131. findRefreshedSource
+ * 132. summarizeSourceDraftChange
+ * 133. listDraftParameterValues
+ * 134. formatAppliedSourceFeedback
+ * 135. listAppliedSourceChanges
+ * 136. appendParameterChange
+ * 137. findFirstDifference
+ * 138. resetSourceDraft
+ * 139. updateDraftTemplate
+ * 140. validateDraft
+ * 141. hasDraftRowUserContent
+ * 142. hasDraftAliasWithoutValue
+ * 143. createLookupActions
+ * 144. selectSourceSectionOption
+ * 145. handleSourcePaste
+ * 146. openManualSourceWhenIdle
+ * 147. openBasedOnSource
+ * 148. updateSourceSectionSelection
+ * 149. openExistingSourceWhenIdle
+ * 150. insertListedSourceWhenIdle
+ * 151. insertListedExistingSource
+ * 152. finishExistingSourceInsertion
+ * 153. resolveSourceInput
+ * 154. chooseAutomaticSource
+ * 155. openExistingSource
+ * 156. findExistingSourceById
+ * 157. loadNewSourceDraft
+ * 158. openDraft
+ * 159. refreshExistingSources
+ * 160. retainExistingSectionPath
+ * 161. insertExistingSource
+ * 162. insertNewSource
+ * 163. updateExistingSource
+ * 164. finishSourceManager
+ * 165. createBlankDraftRow
+ * 166. cloneDraft
+ * 167. formatError
+ * 168. formatDraftParameterCollisionNotice
+ * 169. appendWarning
+ * 170. formatPluralMessage
  */
 
 import {
@@ -127,7 +300,7 @@ import {
     type ToolActions,
 } from "./dialogs.ts";
 import { installCitationFormatterStyles } from "./styles.ts";
-import * as editBox from "../../platform/edit-box/index.ts";
+import type { EditBox } from "../../app/contracts/editor.ts";
 import type { ActionNotificationType } from "../../platform/mediawiki/notifications/index.ts";
 import {
     cdxIconCheck,
@@ -185,7 +358,7 @@ let analysisChangeSequence = 0;
 interface SourceManagerActionContext extends SourceManagerDependencies {
     cleanup: () => void;
     close: () => void;
-    editor: editBox.EditBox;
+    editor: EditBox;
     isActive: () => boolean;
     state: SourceManagerState;
     templateNameContext: TemplateNameContext;
@@ -280,7 +453,7 @@ export function createOpenCitationFormatterDialog(
  * @param templateNameContext - Wiki-scoped template-name context.
  */
 function mountSourceManager(
-    editor: editBox.EditBox,
+    editor: EditBox,
     require: ResourceLoaderRequire,
     options: SourceManagerOptions,
     dependencies: SourceManagerDependencies,
@@ -364,7 +537,7 @@ function mountSourceManager(
  */
 export function createSourceManagerComponent(
     Vue: VueModule,
-    editor: editBox.EditBox,
+    editor: EditBox,
     cleanup: () => void,
     configuration: SourceManagerConfiguration,
 ): unknown {
@@ -598,7 +771,7 @@ function getCurrentCs1CheckOptions(): { pageTitle: string } {
  * @returns Created source lookup, insertion, and editing actions.
  */
 function createSourceManagerActions(
-    editor: editBox.EditBox,
+    editor: EditBox,
     state: SourceManagerState,
     services: SourceManagerActionServices,
 ) {
@@ -753,7 +926,7 @@ function applyArticleFormatResult(
     const { editor, state } = context;
     const textChanged = result.text !== beforeText;
     if (textChanged) {
-        editBox.writePreservingPosition(editor, result.text);
+        context.writePreservingPosition(editor, result.text);
         recordSessionWrite(state, beforeText, result.text);
         clearAnalysisUndo(state);
     }
@@ -888,7 +1061,7 @@ function buildArticleFormatAttempt(
 }
 
 function isCurrentArticleFormatAttempt(
-    editor: editBox.EditBox,
+    editor: EditBox,
     state: SourceManagerState,
 ): boolean {
     const attempt = state.formatArticleAttempt.value;
@@ -3746,7 +3919,7 @@ function openDraft(
  * @param state - Mutable operation state.
  */
 function refreshExistingSources(
-    editor: editBox.EditBox,
+    editor: EditBox,
     state: SourceManagerState,
 ): void {
     const text = editor.read();
@@ -3783,7 +3956,7 @@ function retainExistingSectionPath(
  * @param style - Style value.
  */
 function insertExistingSource(
-    editor: editBox.EditBox,
+    editor: EditBox,
     source: ExistingSource,
     style: ReferenceStyle,
     details?: string,
@@ -3802,7 +3975,7 @@ function insertExistingSource(
  * @param layout - Citation layout.
  */
 function insertNewSource(
-    editor: editBox.EditBox,
+    editor: EditBox,
     draft: SourceDraft,
     layout: CitationLayout,
 ): void {
@@ -3818,7 +3991,7 @@ function insertNewSource(
  * @param draft - Source draft to process.
  */
 function updateExistingSource(
-    editor: editBox.EditBox,
+    editor: EditBox,
     state: SourceManagerState,
     draft: SourceDraft,
 ): void {

@@ -15,6 +15,18 @@ site-specific guide:
 - [Chinese Wikipedia CS1 maintenance][2] describes the zhwiki comparison
   snapshot, additional parameter ordering, and local rules.
 
+<!-- toc:start -->
+
+## Contents
+
+- [Authority and safety](#authority-and-safety)
+- [Refresh citation TemplateData](#refresh-citation-templatedata)
+- [Compare site TemplateData](#compare-site-templatedata)
+- [Review the Lua rules](#review-the-lua-rules)
+- [Finish and verify](#finish-and-verify)
+
+<!-- toc:end -->
+
 ## Authority and safety
 
 Use HTTPS for every request. Keep ad hoc downloads outside the package and

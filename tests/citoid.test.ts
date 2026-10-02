@@ -1,5 +1,17 @@
 /**
- * Tests raw Wikimedia Citoid metadata requests.
+ * @file tests/citoid.test.ts
+ * Purpose: Tests raw Wikimedia Citoid metadata requests.
+ *
+ * Table of contents:
+ * 1. Imports
+ * 2. Constants and state
+ * 3. jsonResponse
+ * 4. testReturnsFirstRawRecord
+ * 5. Test scenarios
+ * 6. testEncodesLookupText
+ * 7. testRejectsBlankLookup
+ * 8. testReportsHttpStatus
+ * 9. testRejectsInvalidPayloads
  */
 
 import assert from "node:assert/strict";

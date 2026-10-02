@@ -1,4 +1,15 @@
-/** Native textarea editing operations. */
+/**
+ * @file src/platform/mediawiki/edit-box/native.ts
+ * Purpose: Native textarea editing operations.
+ *
+ * Table of contents:
+ * 1. writeNative
+ * 2. writeNativePreservingPosition
+ * 3. replaceNativeSelection
+ * 4. restoreDomScroll
+ * 5. clampEditBoxOffset
+ * 6. dispatchValueEvents
+ */
 
 export function writeNative(element: HTMLTextAreaElement, text: string): void {
     element.value = text;

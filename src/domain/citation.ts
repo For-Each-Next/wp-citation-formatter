@@ -1,5 +1,72 @@
 /**
- * Canonicalizes and orders citation data and derives ref names.
+ * @file src/domain/citation.ts
+ * Purpose: Canonicalizes and orders citation data and derives ref names.
+ *
+ * Table of contents:
+ * 1. Imports
+ * 2. Exports
+ * 3. Constants and state
+ * 4. CitationIdentity
+ * 5. CitationParameterCollision
+ * 6. ResolvedCitationParam
+ * 7. CitationAuthorSelection
+ * 8. CitationValueSelection
+ * 9. formatCitationTemplate
+ * 10. canonicalizeCitation
+ * 11. findCitationParameterCollisions
+ * 12. getCitationParameterGroupNames
+ * 13. suffixCitationParameterCollisions
+ * 14. withoutEmptyCitationParams
+ * 15. resolveCitationParams
+ * 16. resolveCitationOutputParamGroups
+ * 17. getCanonicalCitationParamName
+ * 18. getRepeatedMarkerBase
+ * 19. countCitationParamNames
+ * 20. suffixRepeatedCitationParams
+ * 21. getRepeatedCitationParamOutputBases
+ * 22. getUnusedRepeatMarkerName
+ * 23. normalizeParamKey
+ * 24. buildRepeatedCitationParamName
+ * 25. getAlphabeticSuffix
+ * 26. normalizeNameOverrideSpacing
+ * 27. formatNameOverrideComment
+ * 28. sortCitationParams
+ * 29. getFirstCitationParamIndexes
+ * 30. getCitationParamSortOrder
+ * 31. getAuthorParamOrder
+ * 32. normalizeEnglishDate
+ * 33. buildIsoDate
+ * 34. getCitationIdentity
+ * 35. getCitationNameContributors
+ * 36. isCreatorParam
+ * 37. mapSourceIdentityParam
+ * 38. getSourceIdentityKey
+ * 39. addFirstAuthorInitials
+ * 40. appendCitationLocator
+ * 41. getCitationAuthor
+ * 42. selectCitationAuthor
+ * 43. selectCitationTitleAuthor
+ * 44. formatTitleNameFallback
+ * 45. stripScriptTitleLanguage
+ * 46. formatTitleFallback
+ * 47. collectCitationAuthors
+ * 48. getCitationAuthorIndex
+ * 49. getCitationAuthorCandidates
+ * 50. authorNameValue
+ * 51. formatAuthorList
+ * 52. getCitationYear
+ * 53. selectCitationYear
+ * 54. getSourceLocator
+ * 55. selectSourceLocator
+ * 56. normalizeLocatorTime
+ * 57. canonicalizeSourceUrl
+ * 58. nameValue
+ * 59. extractNameOverride
+ * 60. hasFieldDirective
+ * 61. cleanValue
+ * 62. buildCanonicalNameMap
+ * 63. addNumberedAuthorAliases
+ * 64. addCanonicalAliases
  */
 
 import {

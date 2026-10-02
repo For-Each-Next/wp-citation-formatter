@@ -6,9 +6,26 @@
 > at the reading end of horizontal flow groups (right in LTR, left in RTL), and at
 > the top of stacked groups. Use `spacing-75` (12px) between grouped actions.
 
+<!-- toc:start -->
+
+## Contents
+
+- [Scope](#scope)
+- [Folder names and ownership](#folder-names-and-ownership)
+- [Dependencies and startup](#dependencies-and-startup)
+- [UI ownership](#ui-ownership)
+- [Editor changes](#editor-changes)
+- [Build boundary](#build-boundary)
+
+<!-- toc:end -->
+
+## Scope
+
 Citation Formatter separates deterministic citation rules from editor
 integration, external services, and UI state. Ordinary functions and typed
 contracts connect these responsibilities.
+
+## Folder names and ownership
 
 | Path                           | Responsibility                                                 |
 | ------------------------------ | -------------------------------------------------------------- |
@@ -31,7 +48,7 @@ for deliberate public capabilities, including `src/index.ts`; dialog assembly
 uses the named `dialogs.ts` module. Unit tests use `*.test.ts`, browser scenarios
 use `*.spec.ts`, and authored developer guides live in `docs/`.
 
-## Startup and dependencies
+## Dependencies and startup
 
 `app/browser.ts` invokes `start` in `app/main.ts`. The composition root checks
 the page content model, waits for MediaWiki capabilities, creates platform
@@ -81,7 +98,10 @@ checks session and source revisions before applying results.
 
 ## Editor changes
 
-The editor abstraction supports reading current source, replacing a selection,
+The application owns the editor contract; source-manager features receive the
+position-preserving write operation from the composition root. MediaWiki editor
+adapters live in `src/platform/mediawiki/edit-box/`. The editor abstraction
+supports reading current source, replacing a selection,
 writing an accepted transformation, and restoring focus. Operations that
 promise current article content re-read it. Review fixes record enough state
 to revert only their own changes; recovery does not overwrite later unrelated

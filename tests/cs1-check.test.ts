@@ -1,4 +1,11 @@
-/** Tests the typed MediaWiki adapter used for live CS1 checks. */
+/**
+ * @file tests/cs1-check.test.ts
+ * Purpose: Tests the typed MediaWiki adapter used for live CS1 checks.
+ *
+ * Table of contents:
+ * 1. Imports
+ * 2. Test scenarios
+ */
 
 import assert from "node:assert/strict";
 import test from "node:test";

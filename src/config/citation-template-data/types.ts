@@ -1,4 +1,12 @@
-/** Metadata fields retained from citation-template TemplateData. */
+/**
+ * @file src/config/citation-template-data/types.ts
+ * Purpose: Metadata fields retained from citation-template TemplateData.
+ *
+ * Table of contents:
+ * 1. CitationTemplateData
+ * 2. CitationTemplateDataMap
+ */
+
 export interface CitationTemplateData {
     aliases: Record<string, string[]>;
     canonicalName?: string;

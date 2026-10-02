@@ -1,5 +1,28 @@
 /**
- * Filtering and table presentation for existing citation sources.
+ * @file src/features/source-manager/list-presentation.ts
+ * Purpose: Filtering and table presentation for existing citation sources.
+ *
+ * Table of contents:
+ * 1. Imports
+ * 2. Constants and state
+ * 3. SourceSectionSelector
+ * 4. SourceTableRow
+ * 5. SourceTableGroup
+ * 6. SourceListDerivedInputs
+ * 7. SourceListDerivedState
+ * 8. createSourceListDerivedState
+ * 9. toSourceTableRow
+ * 10. toSubReferenceTableRows
+ * 11. toSubReferenceTableRow
+ * 12. formatSourceAuthorYear
+ * 13. isNonEmpty
+ * 14. formatSourceUsageTitle
+ * 15. formatSourceUsageSection
+ * 16. buildSourceSectionSelectors
+ * 17. hasLeadingSourceSection
+ * 18. buildLeadingSourceSection
+ * 19. buildSourceSectionSelector
+ * 20. formatSourceSectionOption
  */
 
 import {

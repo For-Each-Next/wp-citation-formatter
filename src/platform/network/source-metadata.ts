@@ -1,4 +1,27 @@
-/** Resolves citation metadata and existing Wayback snapshots. */
+/**
+ * @file src/platform/network/source-metadata.ts
+ * Purpose: Resolves citation metadata and existing Wayback snapshots.
+ *
+ * Table of contents:
+ * 1. Imports
+ * 2. Constants and state
+ * 3. SourceArchiveMetadata
+ * 4. ResolvedSourceMetadata
+ * 5. SourceMetadataOptions
+ * 6. WaybackAvailabilityResponse
+ * 7. fetchAvailableArchive
+ * 8. resolveSourceMetadata
+ * 9. fetchSourceCiteTemplate
+ * 10. resolveSourceArchive
+ * 11. requestAvailableArchive
+ * 12. buildFallbackTemplate
+ * 13. buildFallbackCitation
+ * 14. getHttpSourceUrl
+ * 15. getRejectedMessage
+ * 16. buildAvailabilityUrl
+ * 17. parseAvailableArchive
+ * 18. formatArchiveDate
+ */
 
 import * as citoid from "../citoid/index.ts";
 import { isGregorianCalendarDate } from "../../domain/calendar-date.ts";

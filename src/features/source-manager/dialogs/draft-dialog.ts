@@ -1,4 +1,16 @@
-/** Build-injected citation draft dialog bundle. */
+/**
+ * @file src/features/source-manager/dialogs/draft-dialog.ts
+ * Purpose: Build-injected citation draft dialog bundle.
+ *
+ * Table of contents:
+ * 1. Imports
+ * 2. CodexIcons
+ * 3. DraftStateValue
+ * 4. DraftDialogActions
+ * 5. DraftDialogContext
+ * 6. Constants and state
+ * 7. Exports
+ */
 
 import type {
     CreatorAliasSuggestion,

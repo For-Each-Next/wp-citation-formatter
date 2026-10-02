@@ -1,53 +1,54 @@
 # Citation Formatter
 
-A standalone MediaWiki gadget for creating, organizing, and reviewing citations
-in the source editor. Review changes in the editor before publishing an article.
+[English](README.md) · [繁體中文](README.zh-Hant.md) · [简体中文](README.zh-Hans.md)
+
+Create, organize, and review citations in a MediaWiki source editor. Accepted changes stay in the editor until you publish the article.
+
+<!-- toc:start -->
+
+## Contents
+
+- [Features](#features)
+- [Installation](#installation)
+- [How to use](#how-to-use)
+- [Screenshots](#screenshots)
+- [Help](#help)
+- [License](#license)
+
+<!-- toc:end -->
 
 ## Features
 
-![Sources and their sub-references](docs/images/sub-reference-sources.png)
-![Editing a citation](docs/images/edit-source.png)
+- Create citations from a URL, identifier, pasted text, or manual details.
+- Browse, edit, and reuse sources, including shared reference details.
+- Format citation templates and review citation issues with session recovery.
+- Choose an English, Traditional Chinese, or Simplified Chinese interface.
 
-The screenshot excerpts from Chinese Wikipedia retain their
-[CC BY-SA 4.0 license and contributor attribution](THIRD-PARTY-NOTICES.md).
-All documentation images use a 1024 × 768 viewport at device pixel ratio 1.
+![Citation Formatter using BanG Dream! article source](docs/images/sources.png)
 
-- Create citations from URLs, identifiers, pasted text, or manual details.
-- Browse, edit, and reuse sources, including shared sub-reference details.
-- Format citation templates, normalize fields, and organize named references.
-- Review citation issues and recover accepted changes during the session.
-- Use English, Simplified Chinese, or Traditional Chinese Codex interfaces.
+## Installation
 
-See the [control panel guide](docs/control-panel.md) for the workflow and the
-[reference name guide](docs/reference-names.md) for naming conventions.
+- **Tampermonkey:** open the [latest readable userscript](https://github.com/For-Each-Next/wp-citation-formatter/releases/latest/download/citation_formatter.user.js) and confirm installation in your userscript manager.
+- **MediaWiki user script:** download the [latest gadget file](https://github.com/For-Each-Next/wp-citation-formatter/releases/latest/download/citation_formatter.min.js), copy its complete contents into your wiki's `Special:MyPage/common.js`, save, and reload.
+
+Install one of these files. Preserve the included license notices. The userscript runs on Wikipedia language editions.
+
+To remove the tool, disable its entry in Tampermonkey or remove its code from `common.js`, then reload Wikipedia.
 
 ## How to use
 
-Build with Node.js 24.14.1 or newer:
+Open an article with **Edit source**, then select **Citation Formatter** in page tools or the floating launcher. Add a source, browse existing sources, or review formatting changes. Confirm each edit in the dialog and review the article before publishing.
 
-```sh
-npm ci
-npm run build
-```
+See the [workflow guide](docs/control-panel.md) for details. Native source textareas, current MediaWiki CodeMirror, and VisualEditor source mode are supported. Enhanced editors can use the shared backing-textarea contract.
 
-Copy `dist/citation_formatter.min.js` into `Special:MyPage/common.js` or
-install it as a site gadget. Userscript managers can install
-`dist/citation_formatter.user.js` instead. See the
-[installation guide](docs/installation.md) for site and userscript settings.
+## Screenshots
 
-On an **Edit source** page, open **Citation Formatter** from page actions, the
-toolbox, or its floating launcher. Native textareas, CodeMirror, and VisualEditor
-source mode are supported. Accepted changes stay in the editor until publication.
+The screenshots show real offline browser sessions based on the Chinese Wikipedia [BanG Dream! article, revision 94028176](https://zh.wikipedia.org/w/index.php?oldid=94028176). [Capture details](docs/screenshots.md) describe the fixtures and simulated services. Article text retains its attribution and CC BY-SA 4.0 license.
 
-For development, follow [Contributing](CONTRIBUTING.md) and
-[architecture](docs/architecture.md), including the required
-[Codex button hierarchy](https://doc.wikimedia.org/codex/latest/style-guide/using-links-and-buttons.html#types-and-order-of-buttons).
-Use `npm run verify` to check changes and `npm run screenshots` to refresh
-the documentation images with offline fixtures.
+## Help
+
+See [Contributing](CONTRIBUTING.md), [architecture](docs/architecture.md), and the [changelog](CHANGELOG.md) for maintenance information.
 
 ## License
 
-Project-owned code is dedicated under [CC0 1.0 Universal](LICENSE). Wikimedia
-data, screenshot excerpts, bundled Codex icons, and the HTML entity decoder
-retain their applicable terms and attribution. See
-[third-party notices](THIRD-PARTY-NOTICES.md).
+Project-owned code is dedicated under [CC0 1.0](LICENSE). Third-party code, icons, data, and article excerpts retain their original terms; see [third-party notices](THIRD-PARTY-NOTICES.md).

@@ -1,4 +1,13 @@
-/** Tests citation metadata and existing Wayback snapshot resolution. */
+/**
+ * @file tests/source-metadata.test.ts
+ * Purpose: Tests citation metadata and existing Wayback snapshot resolution.
+ *
+ * Table of contents:
+ * 1. Imports
+ * 2. Constants and state
+ * 3. jsonResponse
+ * 4. Test scenarios
+ */
 
 import assert from "node:assert/strict";
 import test from "node:test";

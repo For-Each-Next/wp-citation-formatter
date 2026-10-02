@@ -12,6 +12,16 @@ sources and interpretation rules.
 
 Last live HTTPS review: 2026-07-26.
 
+<!-- toc:start -->
+
+## Contents
+
+- [Authoritative sources](#authoritative-sources)
+- [TemplateData destination](#templatedata-destination)
+- [Whitelist and date semantics](#whitelist-and-date-semantics)
+
+<!-- toc:end -->
+
 ## Authoritative sources
 
 - [TemplateData API help][2]

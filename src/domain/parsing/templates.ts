@@ -1,4 +1,42 @@
-/** Balanced template queries, local parsing, and serialization. */
+/**
+ * @file src/domain/parsing/templates.ts
+ * Purpose: Balanced template queries, local parsing, and serialization.
+ *
+ * Table of contents:
+ * 1. Imports
+ * 2. ParsedTemplateCall
+ * 3. ParsedTemplateParameter
+ * 4. TemplateBuildParameter
+ * 5. TemplateBuildOptions
+ * 6. TemplateBuildParameters
+ * 7. TemplateStyle
+ * 8. TopLevelRange
+ * 9. TemplateRange
+ * 10. NestingState
+ * 11. Constants and state
+ * 12. findTemplateRanges
+ * 13. findTemplateCalls
+ * 14. splitTopLevel
+ * 15. splitTopLevelRanges
+ * 16. findSeparatorProtectedRanges
+ * 17. isCompleteExtensionTag
+ * 18. hasStrictOpeningTag
+ * 19. mergeSourceRanges
+ * 20. findTopLevelEquals
+ * 21. normalizeTemplateName
+ * 22. parseTemplateCall
+ * 23. parseTemplateParameters
+ * 24. buildTemplate
+ * 25. normalizeBuildParameters
+ * 26. formatInlineParameter
+ * 27. formatBlockParameter
+ * 28. normalizeParameterName
+ * 29. validateTemplateName
+ * 30. updateNesting
+ * 31. readTemplateName
+ * 32. skipBalancedParameter
+ */
+
 import {
     findOpaqueRanges,
     type SourceRange,

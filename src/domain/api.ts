@@ -1,6 +1,16 @@
 /**
- * Side-effect-free citation operations for composition and tests.
+ * @file src/domain/api.ts
+ * Purpose: Side-effect-free citation operations for composition and tests.
+ *
+ * Table of contents:
+ * 1. Imports
+ * 2. CitationManagementContext
+ * 3. formatCitations
+ * 4. manageCitations
+ * 5. manageCitationsWithResult
+ * 6. Exports
  */
+
 import { citationTemplateData as templateData } from "../config/citation-template-data/index.ts";
 import {
     applyNameOverrides,

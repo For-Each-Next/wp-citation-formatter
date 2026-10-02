@@ -1,4 +1,11 @@
-/** Product-owned generated citation TemplateData facade. */
+/**
+ * @file src/config/citation-template-data/index.ts
+ * Purpose: Product-owned generated citation TemplateData facade.
+ *
+ * Table of contents:
+ * 1. Imports
+ * 2. Exports
+ */
 
 import citationTemplateData from "./generated/index.ts";
 import citeBookTemplateData from "./generated/cite-book.ts";

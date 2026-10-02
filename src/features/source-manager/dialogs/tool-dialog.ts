@@ -1,4 +1,19 @@
-/** Build-injected citation-checking and analysis dialog bundle. */
+/**
+ * @file src/features/source-manager/dialogs/tool-dialog.ts
+ * Purpose: Build-injected citation-checking and analysis dialog bundle.
+ *
+ * Table of contents:
+ * 1. Imports
+ * 2. CodexIcons
+ * 3. AnalysisReplacementActions
+ * 4. AnalysisToolActions
+ * 5. CheckerToolActions
+ * 6. ToolActions
+ * 7. ToolDialogActions
+ * 8. ToolDialogContext
+ * 9. Constants and state
+ * 10. Exports
+ */
 
 import type { Cs1CheckedSource } from "../../../app/contracts/cs1-review.ts";
 import type { SourceAnalysisCell } from "../../../domain/source-analysis.ts";

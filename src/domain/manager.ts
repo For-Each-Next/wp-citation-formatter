@@ -1,5 +1,54 @@
 /**
- * Citation-management transformations used after initial formatting.
+ * @file src/domain/manager.ts
+ * Purpose: Citation-management transformations used after initial formatting.
+ *
+ * Table of contents:
+ * 1. Imports
+ * 2. Constants and state
+ * 3. NameOverrideField
+ * 4. NameOverrideUsageItem
+ * 5. NameOverrideOccurrence
+ * 6. NameOverrideUpdate
+ * 7. CompactReferenceSegment
+ * 8. CompactReferenceParts
+ * 9. findNameOverrideFields
+ * 10. applyNameOverrides
+ * 11. addCallNameFields
+ * 12. addNameField
+ * 13. buildNameOverrideUsageItems
+ * 14. formatUsageChipParameter
+ * 15. formatNameOverrideUsage
+ * 16. formatSingleUsage
+ * 17. formatRepeatedUsage
+ * 18. formatUsageParameter
+ * 19. joinNaturalList
+ * 20. getSharedOverride
+ * 21. normalizeUsageParameter
+ * 22. normalizeUsageTemplate
+ * 23. buildOverrideIndex
+ * 24. buildOverrideReplacement
+ * 25. compactReferenceCalls
+ * 26. findCompactReferenceParts
+ * 27. buildCompactReferenceSegment
+ * 28. isCompactableSegment
+ * 29. shouldFlushCompactRun
+ * 30. appendCompactRun
+ * 31. expandCompactReferenceCalls
+ * 32. detectCitationLayout
+ * 33. isFullRefDefinition
+ * 34. isInRefDefinition
+ * 35. isBlockCitationCall
+ * 36. hasBoundaryLineBreak
+ * 37. isNameParam
+ * 38. getNameOverride
+ * 39. removeNameOverride
+ * 40. stripOverrideFromComment
+ * 41. cleanDisplayName
+ * 42. updateParamPart
+ * 43. addNameOverride
+ * 44. isCompactableReuseTag
+ * 45. isRCall
+ * 46. hasOnlyPositionalParams
  */
 
 import {

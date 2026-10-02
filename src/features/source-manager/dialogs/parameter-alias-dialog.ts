@@ -1,4 +1,14 @@
-/** Build-injected reference-name alias dialog bundle. */
+/**
+ * @file src/features/source-manager/dialogs/parameter-alias-dialog.ts
+ * Purpose: Build-injected reference-name alias dialog bundle.
+ *
+ * Table of contents:
+ * 1. Imports
+ * 2. ParameterAliasActions
+ * 3. ParameterAliasContext
+ * 4. Constants and state
+ * 5. Exports
+ */
 
 import type { CitationFormatterI18n } from "../../../i18n/index.ts";
 

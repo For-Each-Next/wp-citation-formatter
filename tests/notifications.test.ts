@@ -1,4 +1,15 @@
-/** Tests native MediaWiki action notifications. */
+/**
+ * @file tests/notifications.test.ts
+ * Purpose: Tests native MediaWiki action notifications.
+ *
+ * Table of contents:
+ * 1. Imports
+ * 2. NotificationCall
+ * 3. collectNotifications
+ * 4. testSeverityMapping
+ * 5. Test scenarios
+ * 6. assertNotification
+ */
 
 import assert from "node:assert/strict";
 import test from "node:test";

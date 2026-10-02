@@ -1,4 +1,36 @@
-/** Database-scoped MediaWiki namespace prefixes used in wikitext. */
+/**
+ * @file src/domain/wiki-titles/index.ts
+ * Purpose: Database-scoped MediaWiki namespace prefixes used in wikitext.
+ *
+ * Table of contents:
+ * 1. NamespacePrefixMap
+ * 2. NamespaceIdMap
+ * 3. NamespaceCatalog
+ * 4. Constants and state
+ * 5. NamespaceDatabaseName
+ * 6. NamespaceSource
+ * 7. decodeNamespaceCatalog
+ * 8. normalizeNamespacePrefix
+ * 9. normalizeWikitextTitleKey
+ * 10. getNamespaceId
+ * 11. getNamespacePrefixes
+ * 12. getNamespaceIds
+ * 13. getTitleNamespaceId
+ * 14. hasNamespacePrefix
+ * 15. stripNamespacePrefix
+ * 16. formatNamespaceTitle
+ * 17. decodeNamespacePrefixes
+ * 18. readNamespaceAliases
+ * 19. readNamespaceId
+ * 20. readNamespaceName
+ * 21. readOptionalString
+ * 22. readRecord
+ * 23. invalidSiteinfoError
+ * 24. uniquePrefixes
+ * 25. createNamespaceIds
+ * 26. freezeNamespaceCatalogs
+ * 27. readEnteredNamespacePrefix
+ */
 
 export type NamespacePrefixMap = Readonly<Record<number, readonly string[]>>;
 
@@ -232,7 +264,6 @@ const WIKI_NAMESPACE_IDS = Object.freeze({
  *
  * The caller remains responsible for requesting `namespaces` and
  * `namespacealiases`. Modern `name` and `alias` fields are accepted.
- * The legacy `*` field is accepted too.
  *
  * @param databaseName - Database that supplied the response.
  * @param response - MediaWiki `action=query&meta=siteinfo` response.
@@ -465,7 +496,7 @@ function readNamespaceName(
     if (value == null) {
         return null;
     }
-    const name = value.name ?? value.alias ?? value["*"];
+    const name = value.name ?? value.alias;
     return typeof name === "string" ? name : null;
 }
 

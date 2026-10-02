@@ -1,4 +1,12 @@
-/** Tests shared short-footnote citation resolution. */
+/**
+ * @file tests/short-footnotes.test.ts
+ * Purpose: Tests shared short-footnote citation resolution.
+ *
+ * Table of contents:
+ * 1. Imports
+ * 2. Constants and state
+ * 3. Test scenarios
+ */
 
 import assert from "node:assert/strict";
 import test from "node:test";

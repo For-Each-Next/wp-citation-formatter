@@ -1,4 +1,18 @@
-/** Build-injected main Citation Formatter dialog bundle. */
+/**
+ * @file src/features/source-manager/dialogs/main-dialog.ts
+ * Purpose: Build-injected main Citation Formatter dialog bundle.
+ *
+ * Table of contents:
+ * 1. Imports
+ * 2. MainDialogStateKey
+ * 3. MainDialogStateBindings
+ * 4. CodexIcons
+ * 5. MainDialogActions
+ * 6. MainDialogContext
+ * 7. MainDialogTableSlotScope
+ * 8. Constants and state
+ * 9. Exports
+ */
 
 import type { CitationFormatterI18n } from "../../../i18n/index.ts";
 import type {

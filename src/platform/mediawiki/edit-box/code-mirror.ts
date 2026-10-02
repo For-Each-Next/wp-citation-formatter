@@ -1,4 +1,23 @@
-/** MediaWiki CodeMirror 6 discovery and editing operations. */
+/**
+ * @file src/platform/mediawiki/edit-box/code-mirror.ts
+ * Purpose: MediaWiki CodeMirror 6 discovery and editing operations.
+ *
+ * Table of contents:
+ * 1. Imports
+ * 2. Constants and state
+ * 3. registerCodeMirrorHooks
+ * 4. findCodeMirror
+ * 5. readCodeMirror
+ * 6. writeCodeMirror
+ * 7. writeCodeMirrorPreservingPosition
+ * 8. replaceCodeMirrorSelection
+ * 9. focusCodeMirror
+ * 10. trackCodeMirror
+ * 11. trackCodeMirrorToggle
+ * 12. removeCodeMirrorForTextarea
+ * 13. isCodeMirrorTarget
+ * 14. isCodeMirrorUsable
+ */
 
 import type { CodeMirrorEditor } from "./contracts.ts";
 import { clampEditBoxOffset, restoreDomScroll } from "./native.ts";

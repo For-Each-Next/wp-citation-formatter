@@ -1,5 +1,11 @@
 /**
- * Tests the shared ISO language-name normalizer.
+ * @file tests/language-codes.test.ts
+ * Purpose: Tests the shared ISO language-name normalizer.
+ *
+ * Table of contents:
+ * 1. Imports
+ * 2. Constants and state
+ * 3. Test scenarios
  */
 
 import assert from "node:assert/strict";

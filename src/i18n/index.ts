@@ -1,5 +1,15 @@
 /**
- * Citation Formatter locale registry and domain-message adapters.
+ * @file src/i18n/index.ts
+ * Purpose: Citation Formatter locale registry and domain-message adapters.
+ *
+ * Table of contents:
+ * 1. Imports
+ * 2. Constants and state
+ * 3. MessageId
+ * 4. CitationFormatterI18n
+ * 5. createCitationFormatterI18n
+ * 6. initializeCitationFormatterI18n
+ * 7. msg
  */
 
 import * as i18n from "../shared/i18n/index.ts";

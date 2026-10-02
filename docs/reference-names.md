@@ -11,6 +11,17 @@ dates, source identities, and part locators. Structured HTML comments can
 override one component or exclude a field without changing displayed citation
 text.
 
+<!-- toc:start -->
+
+## Contents
+
+- [Named footnote reuse](#named-footnote-reuse)
+- [Name aliases](#name-aliases)
+- [Source identities](#source-identities)
+- [Exclusion directives](#exclusion-directives)
+
+<!-- toc:end -->
+
 ## Named footnote reuse
 
 An existing footnote is matched by its name and reference group together.

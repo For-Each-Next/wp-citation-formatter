@@ -1,4 +1,11 @@
-/** Tests database-scoped MediaWiki namespace prefixes. */
+/**
+ * @file tests/wiki-titles.test.ts
+ * Purpose: Tests database-scoped MediaWiki namespace prefixes.
+ *
+ * Table of contents:
+ * 1. Imports
+ * 2. Test scenarios
+ */
 
 import assert from "node:assert/strict";
 import test from "node:test";
@@ -59,13 +66,13 @@ test("siteinfo decoding builds a scoped namespace catalog", () => {
     assert.equal(Object.isFrozen(catalog.namespacePrefixes[4]), true);
 });
 
-test("siteinfo decoding accepts legacy star fields", () => {
-    const catalog = decodeNamespaceCatalog("legacywiki", {
+test("siteinfo decoding preserves the main namespace and aliases", () => {
+    const catalog = decodeNamespaceCatalog("examplewiki", {
         query: {
-            namespacealiases: [{ id: 10, "*": "T" }],
+            namespacealiases: [{ id: 10, name: "T" }],
             namespaces: {
-                0: { id: 0, "*": "" },
-                10: { canonical: "Template", id: 10, "*": "Pattern" },
+                0: { id: 0, name: "" },
+                10: { canonical: "Template", id: 10, name: "Pattern" },
             },
         },
     });

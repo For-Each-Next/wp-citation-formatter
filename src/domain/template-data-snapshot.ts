@@ -1,4 +1,17 @@
-/** Deterministic precedence for generated citation TemplateData snapshots. */
+/**
+ * @file src/domain/template-data-snapshot.ts
+ * Purpose: Deterministic precedence for generated citation TemplateData snapshots.
+ *
+ * Table of contents:
+ * 1. Imports
+ * 2. Constants and state
+ * 3. mergeCitationTemplateDataSnapshots
+ * 4. normalizeSnapshotPage
+ * 5. readParameterNames
+ * 6. isSafeParameterName
+ * 7. isApiFlag
+ * 8. isRecord
+ */
 
 import type { CitationTemplateData } from "../config/citation-template-data/types.ts";
 

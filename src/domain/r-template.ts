@@ -1,4 +1,47 @@
-/** Converts wiki-specific R calls to native reference markup. */
+/**
+ * @file src/domain/r-template.ts
+ * Purpose: Converts wiki-specific R calls to native reference markup.
+ *
+ * Table of contents:
+ * 1. Imports
+ * 2. IndexedAliases
+ * 3. RParameterRule
+ * 4. RTemplateConfig
+ * 5. RTemplateReferenceKey
+ * 6. NativeRTemplateReference
+ * 7. Constants and state
+ * 8. convertRTemplateCall
+ * 9. canConvertRTemplateCall
+ * 10. canCompactRpTemplateCall
+ * 11. buildCompactRTemplateCall
+ * 12. getRTemplateReferenceKeys
+ * 13. getRTemplateConfig
+ * 14. indexParameters
+ * 15. indexCompactRpParameters
+ * 16. indexNativeRpAnnotations
+ * 17. buildCompactParameters
+ * 18. appendCompactAnnotationParameters
+ * 19. resolveZhwikiPageCompactName
+ * 20. hasUnsafeCompactReferenceName
+ * 21. hasTopLevelEquals
+ * 22. buildReference
+ * 23. getReferenceContent
+ * 24. buildReferenceTag
+ * 25. buildReuseTag
+ * 26. buildDefinitionTag
+ * 27. buildRpAnnotation
+ * 28. getIndexedValue
+ * 29. getIndexedNames
+ * 30. hasOnlySupportedParameters
+ * 31. hasUnambiguousParameters
+ * 32. hasAtMostOneEnteredAlias
+ * 33. getEnteredAliasValues
+ * 34. hasContiguousReferenceNames
+ * 35. hasCompleteReferenceSlots
+ * 36. addIndexedNames
+ * 37. getSafePositionalName
+ * 38. getFirstDefined
+ */
 
 import {
     wikitext,

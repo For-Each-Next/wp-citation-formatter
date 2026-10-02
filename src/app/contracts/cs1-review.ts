@@ -1,5 +1,14 @@
 /**
- * Defines the UI-facing contract for live CS1 review workflows.
+ * @file src/app/contracts/cs1-review.ts
+ * Purpose: Defines the UI-facing contract for live CS1 review workflows.
+ *
+ * Table of contents:
+ * 1. Imports
+ * 2. Cs1ReviewContext
+ * 3. Cs1CheckedSource
+ * 4. Cs1ArticleReview
+ * 5. Cs1ExistingSourceReview
+ * 6. Cs1ReviewWorkflow
  */
 
 import type {

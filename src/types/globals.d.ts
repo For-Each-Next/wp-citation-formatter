@@ -1,5 +1,12 @@
 /**
- * Build globals and template context for Citation Formatter.
+ * @file src/types/globals.d.ts
+ * Purpose: Build globals and template context for Citation Formatter.
+ *
+ * Table of contents:
+ * 1. Imports
+ * 2. TemplateContext
+ * 3. Ambient declarations
+ * 4. Exports
  */
 
 import type {

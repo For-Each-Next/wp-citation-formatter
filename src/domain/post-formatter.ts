@@ -1,5 +1,15 @@
 /**
- * Applies final author labels and serializes ordered citation metadata.
+ * @file src/domain/post-formatter.ts
+ * Purpose: Applies final author labels and serializes ordered citation metadata.
+ *
+ * Table of contents:
+ * 1. Imports
+ * 2. formatBlockCitation
+ * 3. formatInlineCitation
+ * 4. getSerializableCitationParams
+ * 5. getCitationOutputParams
+ * 6. countAuthors
+ * 7. getOutputParamName
  */
 
 import type { CitationParam, CitationTemplate } from "./types.ts";

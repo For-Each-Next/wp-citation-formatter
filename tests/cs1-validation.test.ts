@@ -1,4 +1,12 @@
-/** Tests mapping live enwiki and zhwiki CS1 output to draft fields. */
+/**
+ * @file tests/cs1-validation.test.ts
+ * Purpose: Tests mapping live enwiki and zhwiki CS1 output to draft fields.
+ *
+ * Table of contents:
+ * 1. Imports
+ * 2. getRowIndex
+ * 3. Test scenarios
+ */
 
 import assert from "node:assert/strict";
 import test from "node:test";

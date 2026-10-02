@@ -1,5 +1,45 @@
 /**
- * Loads generic citation TemplateData with a small MediaWiki cache.
+ * @file src/platform/mediawiki/template-data.ts
+ * Purpose: Loads generic citation TemplateData with a small MediaWiki cache.
+ *
+ * Table of contents:
+ * 1. Imports
+ * 2. Exports
+ * 3. Constants and state
+ * 4. TemplateDataObjectStorage
+ * 5. CitationTemplateDataLoadOptions
+ * 6. createTemplateDataObjectStorage
+ * 7. CachedTemplateData
+ * 8. ResolvedTemplateData
+ * 9. TemplateDataCache
+ * 10. FetchedTemplateDataBatch
+ * 11. ResolvedCacheEntries
+ * 12. loadCitationTemplateData
+ * 13. resolveCacheEntries
+ * 14. fetchTemplateDataBatches
+ * 15. applyDownloadedEntries
+ * 16. evictRefreshedEntry
+ * 17. getRequestedTemplateNames
+ * 18. chunkNames
+ * 19. fetchTemplateDataBatch
+ * 20. parseTemplateDataPages
+ * 21. parseApiPage
+ * 22. parseApiParameters
+ * 23. buildCompleteParamOrder
+ * 24. normalizeApiTemplateTitle
+ * 25. stripApiTemplateNamespace
+ * 26. normalizeBareTemplateTitle
+ * 27. readParameterNameArray
+ * 28. isSafeTemplateName
+ * 29. isSafeParameterName
+ * 30. readTemplateDataCache
+ * 31. isTemplateDataCache
+ * 32. isCachedTemplateData
+ * 33. isCitationTemplateData
+ * 34. removeCacheTimestamp
+ * 35. pruneCache
+ * 36. writeTemplateDataCache
+ * 37. isRecord
  */
 
 import {

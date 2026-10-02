@@ -1,3 +1,14 @@
+/**
+ * @file tests/ui/citation-formatter.spec.ts
+ * Purpose: tests / ui / citation formatter.spec module.
+ *
+ * Table of contents:
+ * 1. Imports
+ * 2. Constants and state
+ * 3. Test scenarios
+ * 4. mountGadget
+ */
+
 import { mkdir, readFile } from "node:fs/promises";
 import { fileURLToPath } from "node:url";
 import { expect, test, type Page } from "@playwright/test";
@@ -87,6 +98,55 @@ test("starts the userscript after MediaWiki becomes available", async ({
         1,
     );
     await expect(page.locator("#wpTextbox1")).toHaveValue(initialSource);
+    expect(errors).toEqual([]);
+});
+
+test("opens the portlet action with the Space key", async ({ page }) => {
+    const errors = await mountGadget(page, { open: false });
+    const launcher = page.getByRole("button", {
+        name: "Citation formatter",
+        exact: true,
+    });
+    await expect(launcher).toHaveJSProperty("tagName", "BUTTON");
+    await launcher.focus();
+    await page.keyboard.press("Space");
+    await expect(page.getByRole("dialog")).toBeVisible();
+    expect(errors).toEqual([]);
+});
+
+test("reuses a source in an independently installed enhanced editor", async ({
+    page,
+}) => {
+    test.skip(process.env.ENHANCED_EDITOR_BUNDLE == null);
+    const errors = await mountGadget(page, { open: false });
+    await page.addScriptTag({ path: process.env.ENHANCED_EDITOR_BUNDLE! });
+    const enhanced = page
+        .frameLocator("iframe.wiked-editor-frame")
+        .locator("[contenteditable]");
+    await expect(enhanced).toBeVisible();
+    await enhanced.evaluate((editor) => {
+        editor.focus();
+        const range = editor.ownerDocument.createRange();
+        range.selectNodeContents(editor);
+        range.collapse(false);
+        const selection = editor.ownerDocument.getSelection()!;
+        selection.removeAllRanges();
+        selection.addRange(range);
+        editor.ownerDocument.dispatchEvent(new Event("selectionchange"));
+    });
+    await page.locator("#citation-formatter-quick-launch").click();
+    const dialog = page.getByRole("dialog");
+    await dialog
+        .getByRole("tab", { name: "View sources (2)", exact: true })
+        .click();
+    await dialog
+        .getByRole("button", { name: "Use source", exact: true })
+        .first()
+        .click();
+    await expect(page.locator("#wpTextbox1")).toHaveValue(
+        initialSource + '<ref name="sample" />',
+    );
+    await expect(enhanced).toHaveText(initialSource + '<ref name="sample" />');
     expect(errors).toEqual([]);
 });
 
@@ -949,22 +1009,20 @@ test("ignores other content models", async ({ page }) => {
 test("captures the source and tools panels for visual review", async ({
     page,
 }) => {
-    const captureScreenshots =
-        process.env.DOCUMENTATION_SCREENSHOTS === "1" ||
-        process.env.CITATION_UI_SCREENSHOTS === "1";
+    const captureScreenshots = process.env.DOCUMENTATION_SCREENSHOTS === "1";
     await page.setViewportSize({ width: 1024, height: 768 });
     const errors = await mountGadget(
         page,
         captureScreenshots
             ? {
                   source: await readFile(
-                      `${root}tests/fixtures/eternal-sonata.wikitext`,
+                      `${root}tests/fixtures/bang-dream.wikitext`,
                       "utf8",
                   ),
                   locale: "zh",
                   direction: "ltr",
                   wikiId: "zhwiki",
-                  pageName: "信賴鈴音_～蕭邦之夢～",
+                  pageName: "BanG Dream! 少女樂團派對",
               }
             : {},
     );
@@ -1087,13 +1145,13 @@ test("captures the source and tools panels for visual review", async ({
         await detailsPage.setViewportSize({ width: 1024, height: 768 });
         const detailsErrors = await mountGadget(detailsPage, {
             source: await readFile(
-                `${root}tests/fixtures/mother3-sub-references.wikitext`,
+                `${root}tests/fixtures/bang-dream.wikitext`,
                 "utf8",
             ),
             locale: "zh",
             direction: "ltr",
             wikiId: "zhwiki",
-            pageName: "地球冒险3",
+            pageName: "BanG Dream! 少女樂團派對",
         });
         const detailsMain = detailsPage.getByRole("dialog");
         await detailsMain
@@ -1126,7 +1184,7 @@ test("captures the source and tools panels for visual review", async ({
         const detailsFilter = detailsMain.getByPlaceholder(
             zhHansCatalog["lookup.filterKeywordPlaceholder"],
         );
-        await detailsFilter.fill("Hobonichi2006");
+        await detailsFilter.fill("famitsu");
         await showSourceTable();
         await expect(
             detailsPage.locator(
@@ -1252,6 +1310,7 @@ async function mountGadget(
                         const style = document.createElement("style");
                         style.textContent = css;
                         document.head.append(style);
+                        return { ownerNode: style };
                     },
                     addPortletLink(
                         portlet: string,

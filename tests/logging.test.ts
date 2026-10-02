@@ -1,4 +1,13 @@
-/** Tests shared structured gadget logging. */
+/**
+ * @file tests/logging.test.ts
+ * Purpose: Tests shared structured gadget logging.
+ *
+ * Table of contents:
+ * 1. Imports
+ * 2. LogCall
+ * 3. createOutput
+ * 4. Test scenarios
+ */
 
 import assert from "node:assert/strict";
 import test from "node:test";

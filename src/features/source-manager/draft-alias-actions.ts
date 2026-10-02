@@ -1,5 +1,36 @@
 /**
- * Author-row and reference-name alias actions for source drafts.
+ * @file src/features/source-manager/draft-alias-actions.ts
+ * Purpose: Author-row and reference-name alias actions for source drafts.
+ *
+ * Table of contents:
+ * 1. Imports
+ * 2. Constants and state
+ * 3. AuthorDraftActions
+ * 4. ParameterAliasMutationActions
+ * 5. ParameterAliasPresentationActions
+ * 6. AliasSuggestionDraftActions
+ * 7. AliasDraftActions
+ * 8. createAuthorDraftActions
+ * 9. flashAuthorRows
+ * 10. createAliasDraftActions
+ * 11. createParameterAliasDialogActions
+ * 12. focusInvalidParameterAliasField
+ * 13. applyParameterAliasDialogValues
+ * 14. listSelectedReferenceNameDirectives
+ * 15. mergeReferenceNameDirectives
+ * 16. createParameterAliasPresentationActions
+ * 17. createAliasSuggestionDraftActions
+ * 18. getParameterAliasDialogRow
+ * 19. getParameterAliasLabel
+ * 20. getParameterAliasActionLabel
+ * 21. hasReferenceNameExclusion
+ * 22. getParameterAliasCaption
+ * 23. getParameterAliasDialogError
+ * 24. getParameterAliasValidationError
+ * 25. canApplyParameterAlias
+ * 26. findAvailableAliasSuggestion
+ * 27. buildAliasSuggestionKey
+ * 28. normalizeDraftName
  */
 
 import {

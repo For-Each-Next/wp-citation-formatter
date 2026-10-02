@@ -1,6 +1,6 @@
 {
     "name": "citation-formatter",
-    "version": "0.2.1",
+    "version": "0.2.2",
     "description": "Format and manage citations in MediaWiki source editors.",
     "private": true,
     "license": "CC0-1.0",
@@ -8,7 +8,7 @@
     "browser": "./src/app/browser.ts",
     "scripts": {
         "build": "node scripts/build.mjs",
-        "check": "npm run format:check && npm run lint && npm run check:types && npm run check:unused",
+        "check": "npm run docs:check && npm run format:check && npm run lint && npm run check:types && npm run check:unused",
         "check:types": "vue-tsc --noEmit -p tsconfig.json && tsc --noEmit -p tsconfig.tests.json",
         "check:unused": "knip",
         "format": "prettier --write . \"!package-lock.json\"",
@@ -19,7 +19,9 @@
         "test:ui": "npm run build && node scripts/test-ui.mjs",
         "update:template-data": "node scripts/update-citation-template-data.ts",
         "verify": "npm run check && npm test && npm run test:ui",
-        "screenshots": "DOCUMENTATION_SCREENSHOTS=1 npm run test:ui -- --grep \"captures the source\" --workers=1"
+        "screenshots": "DOCUMENTATION_SCREENSHOTS=1 npm run test:ui -- --grep \"captures the source\" --workers=1",
+        "docs:write": "node scripts/file-docs.mjs",
+        "docs:check": "node scripts/file-docs.mjs --check"
     },
     "devDependencies": {
         "@eslint/js": "10.0.1",

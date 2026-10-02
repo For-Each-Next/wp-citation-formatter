@@ -1,3 +1,16 @@
+/**
+ * @file src/domain/types.ts
+ * Purpose: src / domain / types module.
+ *
+ * Table of contents:
+ * 1. Imports
+ * 2. Exports
+ * 3. CitationParam
+ * 4. CitationTemplate
+ * 5. CitationLayout
+ * 6. TextReplacement
+ */
+
 import type {
     CitationTemplateData,
     CitationTemplateDataMap,

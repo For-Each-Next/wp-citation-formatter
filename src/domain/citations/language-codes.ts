@@ -1,4 +1,14 @@
 /**
+ * @file src/domain/citations/language-codes.ts
+ * Purpose: src / domain / citations / language codes module.
+ *
+ * Table of contents:
+ * 1. Constants and state
+ * 2. normalizeEnglishLanguageCodes
+ * 3. normalizeLanguageValue
+ */
+
+/**
  * Normalizes English ISO language names for reusable gadget workflows.
  *
  * The small table covers common languages in citation data.

@@ -1,4 +1,13 @@
-/** Locale adapters for source validation and analysis messages. */
+/**
+ * @file src/features/source-manager/messages.ts
+ * Purpose: Locale adapters for source validation and analysis messages.
+ *
+ * Table of contents:
+ * 1. Imports
+ * 2. createSourceValidationMessages
+ * 3. createSourceAnalysisMessages
+ * 4. Constants and state
+ */
 
 import type * as analysis from "../../domain/source-analysis.ts";
 import type * as validation from "../../domain/source-validation.ts";

@@ -1,4 +1,12 @@
-/** Structural checks for generated citation TemplateData snapshots. */
+/**
+ * @file tests/template-data.test.ts
+ * Purpose: Structural checks for generated citation TemplateData snapshots.
+ *
+ * Table of contents:
+ * 1. Imports
+ * 2. Constants and state
+ * 3. Test scenarios
+ */
 
 import assert from "node:assert/strict";
 import test from "node:test";

@@ -1,5 +1,20 @@
 /**
- * MediaWiki parse adapter for live CS1 validation.
+ * @file src/platform/mediawiki/cs1-check.ts
+ * Purpose: MediaWiki parse adapter for live CS1 validation.
+ *
+ * Table of contents:
+ * 1. Constants and state
+ * 2. MediaWikiPostApi
+ * 3. Cs1CheckOptions
+ * 4. Cs1CheckResult
+ * 5. buildCs1CheckWikitext
+ * 6. requestCs1WikitextCheck
+ * 7. splitCs1CheckHtml
+ * 8. parseCs1CheckResponse
+ * 9. parseCs1Result
+ * 10. parseCs1Html
+ * 11. parseCs1Categories
+ * 12. isRecord
  */
 
 const CS1_CHECK_ID_PREFIX = "citation-formatter-cs1-check-";

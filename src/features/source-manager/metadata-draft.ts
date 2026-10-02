@@ -1,5 +1,15 @@
 /**
- * Applies resolved source metadata to editable citation drafts.
+ * @file src/features/source-manager/metadata-draft.ts
+ * Purpose: Applies resolved source metadata to editable citation drafts.
+ *
+ * Table of contents:
+ * 1. Imports
+ * 2. createArchiveSeed
+ * 3. formatMetadataFailure
+ * 4. createLookupFallbackDraft
+ * 5. applyResolvedMetadata
+ * 6. buildMetadataWarnings
+ * 7. setSourceDraftValue
  */
 
 import {

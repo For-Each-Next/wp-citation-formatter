@@ -1,4 +1,16 @@
-/** Public editor contracts and narrow host-editor shapes. */
+/**
+ * @file src/platform/mediawiki/edit-box/contracts.ts
+ * Purpose: Public editor contracts and narrow host-editor shapes.
+ *
+ * Table of contents:
+ * 1. CodeMirrorEditor
+ * 2. VisualEditorFragment
+ * 3. VisualEditorScrollContainer
+ * 4. VisualEditorSurface
+ * 5. VisualEditorGlobal
+ * 6. Exports
+ * 7. EditBoxBackend
+ */
 
 export interface CodeMirrorEditor {
     isActive?: boolean;
@@ -77,14 +89,7 @@ export interface VisualEditorGlobal {
     };
 }
 
-/** Editor-independent access to a MediaWiki source edit box. */
-export interface EditBox {
-    readonly element: HTMLTextAreaElement | null;
-    focus(): void;
-    read(): string;
-    replaceSelection(text: string): void;
-    write(text: string): void;
-}
+export type { EditBox } from "../../../app/contracts/editor.ts";
 
 /** Operations supplied by an editor backed by a native textarea. */
 export interface EditBoxBackend {

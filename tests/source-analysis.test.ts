@@ -1,4 +1,16 @@
-/** Tests citation summaries, inconsistencies, and batch replacement. */
+/**
+ * @file tests/source-analysis.test.ts
+ * Purpose: Tests citation summaries, inconsistencies, and batch replacement.
+ *
+ * Table of contents:
+ * 1. Imports
+ * 2. buildAnalysisText
+ * 3. assertAnalysisFindings
+ * 4. Test scenarios
+ * 5. findLinkedOccurrences
+ * 6. applyLinkedReplacements
+ * 7. buildAliasText
+ */
 
 import assert from "node:assert/strict";
 import test from "node:test";

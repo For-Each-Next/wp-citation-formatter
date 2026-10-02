@@ -1,4 +1,12 @@
-/** Assembles five dialogs in shared setup scope. */
+/**
+ * @file src/features/source-manager/dialogs.ts
+ * Purpose: Assembles five dialogs in shared setup scope.
+ *
+ * Table of contents:
+ * 1. Imports
+ * 2. Exports
+ * 3. Constants and state
+ */
 
 import closeConfirmationDialog from "./dialogs/close-confirmation-dialog.ts";
 import {

@@ -1,5 +1,11 @@
 /**
- * Tests citation-template selector tiers and important-template icons.
+ * @file tests/template-options.test.ts
+ * Purpose: Tests citation-template selector tiers and important-template icons.
+ *
+ * Table of contents:
+ * 1. Imports
+ * 2. Test scenarios
+ * 3. assertDefinitionGroupsAreAlphabetical
  */
 
 import assert from "node:assert/strict";

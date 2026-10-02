@@ -1,5 +1,30 @@
 /**
- * Reactive state and derived values for the citation source manager.
+ * @file src/features/source-manager/state.ts
+ * Purpose: Reactive state and derived values for the citation source manager.
+ *
+ * Table of contents:
+ * 1. Imports
+ * 2. Cs1ToolStatus
+ * 3. SourceToolPopup
+ * 4. SourceCheckerTool
+ * 5. ArticleFormatAttempt
+ * 6. PreloadedCheckerSource
+ * 7. SourceManagerState
+ * 8. DraftDerivedInputs
+ * 9. DraftDerivedState
+ * 10. InitialSourceListState
+ * 11. FormatError
+ * 12. SourceManagerStateConfiguration
+ * 13. createSourceManagerState
+ * 14. createInitialInterfaceState
+ * 15. createInitialCs1ToolState
+ * 16. createInitialSourceListState
+ * 17. createDraftDerivedState
+ * 18. omitCollisionMarkerNameErrors
+ * 19. getCurrentCs1DraftFingerprint
+ * 20. clearCheckedCs1Errors
+ * 21. clearDraftValidationSummary
+ * 22. buildDraftSourcePreview
  */
 
 import type { Cs1CheckedSource } from "../../app/contracts/cs1-review.ts";
@@ -33,7 +58,7 @@ import type { CitationLayout } from "../../domain/types.ts";
 import type { TemplateNameContext } from "../../domain/templates.ts";
 import { msg } from "../../i18n/index.ts";
 import { sourceValidationMessages } from "./messages.ts";
-import type * as editBox from "../../platform/edit-box/index.ts";
+import type { EditBox } from "../../app/contracts/editor.ts";
 import type { AnalysisUndoSnapshot } from "./analysis-session.ts";
 import {
     type AppliedAnalysisFinding,
@@ -181,7 +206,7 @@ interface SourceManagerStateConfiguration {
  */
 export function createSourceManagerState(
     Vue: VueModule,
-    editor: editBox.EditBox,
+    editor: EditBox,
     configuration: SourceManagerStateConfiguration,
     wikiId: string,
     formatError: FormatError,

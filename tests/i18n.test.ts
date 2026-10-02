@@ -1,4 +1,12 @@
-/** Locale selection, placeholders, and localized domain diagnostics. */
+/**
+ * @file tests/i18n.test.ts
+ * Purpose: Locale selection, placeholders, and localized domain diagnostics.
+ *
+ * Table of contents:
+ * 1. Imports
+ * 2. placeholders
+ * 3. Test scenarios
+ */
 
 import assert from "node:assert/strict";
 import test from "node:test";

@@ -6,6 +6,14 @@
 > at the reading end of horizontal flow groups (right in LTR, left in RTL), and at
 > the top of stacked groups. Use `spacing-75` (12px) between grouped actions.
 
+<!-- toc:start -->
+
+## Contents
+
+- [Build and install](#build-and-install)
+
+<!-- toc:end -->
+
 ## Build and install
 
 Use Node.js 24.14.1 or newer to install and build:

@@ -1,3 +1,12 @@
+/**
+ * @file src/domain/validation/zhwiki.ts
+ * Purpose: src / domain / validation / zhwiki module.
+ *
+ * Table of contents:
+ * 1. Imports
+ * 2. Constants and state
+ */
+
 import type { CitationValidationConfig } from "./types.ts";
 
 /**

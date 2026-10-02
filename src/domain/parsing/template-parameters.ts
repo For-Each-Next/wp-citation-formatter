@@ -1,4 +1,14 @@
-/** Triple-brace template-parameter syntax queries. */
+/**
+ * @file src/domain/parsing/template-parameters.ts
+ * Purpose: Triple-brace template-parameter syntax queries.
+ *
+ * Table of contents:
+ * 1. Imports
+ * 2. TemplateParameterRange
+ * 3. BraceEntry
+ * 4. findTemplateParameterRanges
+ */
+
 import {
     findOpaqueRanges,
     type SourceRange,

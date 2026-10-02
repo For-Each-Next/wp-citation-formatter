@@ -1,4 +1,16 @@
-/** VisualEditor source-mode operations. */
+/**
+ * @file src/platform/mediawiki/edit-box/visual-editor.ts
+ * Purpose: VisualEditor source-mode operations.
+ *
+ * Table of contents:
+ * 1. Imports
+ * 2. getVisualEditorSurface
+ * 3. writeVisualEditor
+ * 4. writeVisualEditorPreservingPosition
+ * 5. getSourceSelection
+ * 6. restoreVisualEditorSelection
+ * 7. restoreVisualEditorScroll
+ */
 
 import type {
     VisualEditorGlobal,

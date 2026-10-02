@@ -1,5 +1,15 @@
 /**
- * Resolves organization-like citation values to local article links.
+ * @file src/platform/mediawiki/wiki-link.ts
+ * Purpose: Resolves organization-like citation values to local article links.
+ *
+ * Table of contents:
+ * 1. WikiLinkApi
+ * 2. QueryPage
+ * 3. QueryResponse
+ * 4. ParsedWikiLink
+ * 5. resolveCitationWikiLink
+ * 6. parseWikiLink
+ * 7. buildWikiLink
  */
 
 interface WikiLinkApi {

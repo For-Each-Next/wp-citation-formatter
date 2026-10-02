@@ -1,4 +1,28 @@
-/** Generic HTML-like and MediaWiki extension-tag queries. */
+/**
+ * @file src/domain/parsing/tags.ts
+ * Purpose: Generic HTML-like and MediaWiki extension-tag queries.
+ *
+ * Table of contents:
+ * 1. Imports
+ * 2. Constants and state
+ * 3. WikitextTagOptions
+ * 4. WikitextTagAttributePair
+ * 5. WikitextTag
+ * 6. TagToken
+ * 7. OpenTag
+ * 8. TagRangeDetails
+ * 9. findWikitextTags
+ * 10. parseTagAttributes
+ * 11. parseTagAttributePairs
+ * 12. readTagToken
+ * 13. findTagTokenEnd
+ * 14. findClosingTagToken
+ * 15. closeStackTag
+ * 16. buildTag
+ * 17. addTag
+ * 18. normalizeTagSet
+ */
+
 import { findWikitextComments } from "./comments.ts";
 
 export const DEFAULT_LITERAL_TAGS = [

@@ -1,5 +1,35 @@
 /**
- * Maps live CS1 validation output back to citation draft rows.
+ * @file src/domain/cs1-validation.ts
+ * Purpose: Maps live CS1 validation output back to citation draft rows.
+ *
+ * Table of contents:
+ * 1. Imports
+ * 2. Cs1ValidationResult
+ * 3. Cs1IssueSeverity
+ * 4. Cs1Issue
+ * 5. orderCs1ItemsBySeverity
+ * 6. Constants and state
+ * 7. getIgnoredUnknownCs1ParameterName
+ * 8. isUnsupportedParameterCs1Category
+ * 9. getCs1DraftFingerprint
+ * 10. mergeSourceDraftErrors
+ * 11. parseCs1ValidationResult
+ * 12. extractCs1IssueMessages
+ * 13. extractCs1FragmentIssueMessages
+ * 14. extractCs1FragmentIssues
+ * 15. extractCs1HtmlIssues
+ * 16. extractCs1CategoryIssues
+ * 17. getCs1SpanSeverity
+ * 18. deduplicateCs1Issues
+ * 19. normalizeHtmlText
+ * 20. decodeHtmlEntities
+ * 21. findMessageRowIndexes
+ * 22. findNameListRows
+ * 23. isNameListParameter
+ * 24. getMessageCell
+ * 25. normalizeName
+ * 26. normalizeComparableName
+ * 27. appendMessage
  */
 
 import {

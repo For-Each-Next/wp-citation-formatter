@@ -1,4 +1,15 @@
-/** Tests source-manager parsing, matching, editing, and serialization. */
+/**
+ * @file tests/source-manager.test.ts
+ * Purpose: Tests source-manager parsing, matching, editing, and serialization.
+ *
+ * Table of contents:
+ * 1. Imports
+ * 2. Test scenarios
+ * 3. getRow
+ * 4. Constants and state
+ * 5. buildSectionFilterText
+ * 6. assertMetadataFreeDraftControls
+ */
 
 import assert from "node:assert/strict";
 import test from "node:test";

@@ -1,6 +1,25 @@
 /**
- * Supported English Wikipedia CS1/CS2 citation templates.
+ * @file src/domain/templates.ts
+ * Purpose: Supported English Wikipedia CS1/CS2 citation templates.
+ *
+ * Table of contents:
+ * 1. Imports
+ * 2. TemplateNameContext
+ * 3. Constants and state
+ * 4. createTemplateNameContext
+ * 5. normalizeTemplateName
+ * 6. normalizeTemplateDisplayName
+ * 7. stripTemplatePrefix
+ * 8. stripCanonicalTemplatePrefix
+ * 9. normalizeTemplateIdentity
+ * 10. getCanonicalTemplateName
+ * 11. getCanonicalTemplateNameFromKey
+ * 12. isCitationTemplate
+ * 13. isEditableCitationTemplate
+ * 14. isMetadataFreeCitationTemplate
+ * 15. isCitePrefixedTemplate
  */
+
 import {
     type NamespaceSource,
     normalizeNamespacePrefix,

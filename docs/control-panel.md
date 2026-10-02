@@ -11,6 +11,17 @@ Citation Formatter from the page actions, toolbox, or floating launcher.
 The panel keeps citation work in the source editor. Documentation images use a
 1024 × 768 viewport at device pixel ratio 1.
 
+<!-- toc:start -->
+
+## Contents
+
+- [Add a source](#add-a-source)
+- [Browse and reuse](#browse-and-reuse)
+- [Format and review](#format-and-review)
+- [Interaction and layout](#interaction-and-layout)
+
+<!-- toc:end -->
+
 ## Add a source
 
 Enter a URL, identifier, or citation text and choose the lookup action. Check

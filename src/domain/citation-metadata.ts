@@ -1,5 +1,28 @@
 /**
- * Maps raw Citoid metadata into local citation-template wikitext.
+ * @file src/domain/citation-metadata.ts
+ * Purpose: Maps raw Citoid metadata into local citation-template wikitext.
+ *
+ * Table of contents:
+ * 1. Imports
+ * 2. Constants and state
+ * 3. RawCitationMetadata
+ * 4. CitationMetadataFormatOptions
+ * 5. RawCitationCreator
+ * 6. buildCitationTemplate
+ * 7. buildCitationParams
+ * 8. buildBibliographicValues
+ * 9. buildCitationParam
+ * 10. escapeTemplateValue
+ * 11. getSourceUrl
+ * 12. getCitationTemplateName
+ * 13. formatCreators
+ * 14. isRawCitationCreator
+ * 15. formatCreator
+ * 16. getIdentifierText
+ * 17. getExtraIdentifier
+ * 18. normalizeCitationTitle
+ * 19. formatAccessDate
+ * 20. getText
  */
 
 import {

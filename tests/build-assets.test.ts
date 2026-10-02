@@ -1,4 +1,11 @@
-/** Verifies readable asset literals preserve HTML/CSS bytes and JS escaping. */
+/**
+ * @file tests/build-assets.test.ts
+ * Purpose: Verifies readable asset literals preserve HTML/CSS bytes and JS escaping.
+ *
+ * Table of contents:
+ * 1. Imports
+ * 2. Test scenarios
+ */
 
 import assert from "node:assert/strict";
 import test from "node:test";

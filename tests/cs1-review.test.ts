@@ -1,4 +1,12 @@
-/** Tests article-level attribution in the live CS1 review workflow. */
+/**
+ * @file tests/cs1-review.test.ts
+ * Purpose: Tests article-level attribution in the live CS1 review workflow.
+ *
+ * Table of contents:
+ * 1. Imports
+ * 2. Test scenarios
+ * 3. testHiddenMaintenanceAttribution
+ */
 
 import assert from "node:assert/strict";
 import test from "node:test";

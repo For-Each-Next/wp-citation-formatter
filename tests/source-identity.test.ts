@@ -1,4 +1,12 @@
-/** Citation source identity and stale-editor safety. */
+/**
+ * @file tests/source-identity.test.ts
+ * Purpose: Citation source identity and stale-editor safety.
+ *
+ * Table of contents:
+ * 1. Imports
+ * 2. Test scenarios
+ * 3. assertReferenceCounts
+ */
 
 import assert from "node:assert/strict";
 import test from "node:test";

@@ -1,5 +1,11 @@
 /**
- * Generated citation TemplateData index.
+ * @file src/config/citation-template-data/generated/index.ts
+ * Purpose: Generated citation TemplateData index.
+ *
+ * Table of contents:
+ * 1. Imports
+ * 2. Constants and state
+ * 3. Exports
  */
 
 import type { CitationTemplateDataMap } from "../types.ts";

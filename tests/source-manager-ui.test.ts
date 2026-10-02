@@ -1,4 +1,40 @@
-/** Integration tests for source-manager draft actions. */
+/**
+ * @file tests/source-manager-ui.test.ts
+ * Purpose: Integration tests for source-manager draft actions.
+ *
+ * Table of contents:
+ * 1. Imports
+ * 2. Constants and state
+ * 3. Test scenarios
+ * 4. MountedAnalysisFinding
+ * 5. MountedAnalysisTab
+ * 6. MountedManager
+ * 7. prepareDraftForCs1Apply
+ * 8. assertSuccessfulCs1Apply
+ * 9. testCs1SeverityOrder
+ * 10. createDeferred
+ * 11. populateRepeatedMagazine
+ * 12. testScopedConsistencyTabs
+ * 13. assertAnalysisTabGroups
+ * 14. assertScopedAliasApplication
+ * 15. assertUrlDraftParameterRecognition
+ * 16. assertOpenableDraftUrlSafety
+ * 17. assertCs1SourceOrder
+ * 18. callAction
+ * 19. callAsyncAction
+ * 20. createMemoryEditor
+ * 21. createNativeTextarea
+ * 22. installSourceManagerHarness
+ * 23. resetSourceManagerHarness
+ * 24. createVueModule
+ * 25. createCodexComponents
+ * 26. installBrowserGlobals
+ * 27. createMediaWikiGlobal
+ * 28. createFakeDocument
+ * 29. FakeDomParser
+ * 30. snapshotGlobals
+ * 31. restoreGlobals
+ */
 
 import assert from "node:assert/strict";
 import test from "node:test";
@@ -28,7 +64,7 @@ import type {
     ResourceLoaderRequire,
     VueModule,
 } from "../src/features/source-manager/codex.ts";
-import * as editBox from "../src/platform/edit-box/index.ts";
+import * as editBox from "../src/platform/mediawiki/edit-box/index.ts";
 import type { Logger } from "../src/shared/logging/index.ts";
 import type { ActionNotification } from "../src/platform/mediawiki/notifications/index.ts";
 import * as templateNames from "../src/domain/templates.ts";
@@ -71,6 +107,7 @@ const sourceManagerLogger: Logger = {
     warn() {},
 };
 const sourceManagerDependencies = {
+    writePreservingPosition: editBox.writePreservingPosition,
     cs1Review: createCs1ReviewWorkflow({
         buildCheckWikitext: buildCs1CheckWikitext,
         requestCheck: requestCs1WikitextCheck,

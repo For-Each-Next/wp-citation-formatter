@@ -1,5 +1,19 @@
 /**
- * Formats Cite-prefixed templates without applying CS1-only behavior.
+ * @file src/domain/generic-citation.ts
+ * Purpose: Formats Cite-prefixed templates without applying CS1-only behavior.
+ *
+ * Table of contents:
+ * 1. Imports
+ * 2. formatGenericCitationTemplate
+ * 3. serializeGenericCitation
+ * 4. prepareGenericCitation
+ * 5. prepareGenericParams
+ * 6. buildCanonicalNameMap
+ * 7. sortGenericParams
+ * 8. isSafeGenericCitationMetadata
+ * 9. isSafeTemplateName
+ * 10. isSafeParameterName
+ * 11. formatCitationWithPositionals
  */
 
 import { wikitext } from "./parsing/index.ts";

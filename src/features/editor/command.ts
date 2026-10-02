@@ -1,8 +1,19 @@
 /**
- * Source-editor command for citation formatting and source management.
+ * @file src/features/editor/command.ts
+ * Purpose: Source-editor command for citation formatting and source management.
+ *
+ * Table of contents:
+ * 1. Imports
+ * 2. Constants and state
+ * 3. mountCitationFormatter
+ * 4. mountCitationToolLink
+ * 5. mountFloatingCitationLauncher
+ * 6. addToolClickHandler
+ * 7. notifyToolFailure
+ * 8. addCitationLink
+ * 9. installLauncherStyles
  */
 
-import * as editBox from "../../platform/edit-box/index.ts";
 import type { EditorRuntime } from "../../app/contracts/editor.ts";
 import { msg } from "../../i18n/index.ts";
 import type * as sourceManager from "../source-manager/controller.ts";
@@ -29,7 +40,7 @@ export function mountCitationFormatter(
     ) {
         return;
     }
-    const editor = editBox.getEditBox();
+    const editor = runtime.getEditor();
     if (editor == null) {
         return;
     }
@@ -96,7 +107,7 @@ function addToolClickHandler(
         if (event.currentTarget instanceof HTMLElement) {
             event.currentTarget.focus({ preventScroll: true });
         }
-        const editor = editBox.getEditBox();
+        const editor = runtime.getEditor();
         if (editor == null) {
             runtime.notifyAction({
                 key: "editor-unavailable",
@@ -110,13 +121,6 @@ function addToolClickHandler(
         });
     };
     launcher?.addEventListener("click", openOnClick);
-    if (launcher != null && !(launcher instanceof HTMLButtonElement)) {
-        launcher.addEventListener("keydown", function openOnSpace(event) {
-            if (event.key === " ") {
-                openOnClick(event);
-            }
-        });
-    }
 }
 
 /**
@@ -139,7 +143,7 @@ function notifyToolFailure(error: unknown, runtime: EditorRuntime): void {
  * Adds the command to one MediaWiki portlet.
  *
  * @param portlet - Portlet identifier.
- * @returns The actionable anchor added to the portlet.
+ * @returns The native action button added to the portlet.
  */
 function addCitationLink(portlet: string): HTMLElement | null {
     const addPortletLink = mw.util.addPortletLink as unknown as (
@@ -161,9 +165,15 @@ function addCitationLink(portlet: string): HTMLElement | null {
     });
     const anchor =
         item?.matches("a") === true ? item : item?.querySelector("a");
-    const launcher = anchor instanceof HTMLElement ? anchor : item;
-    launcher?.setAttribute("role", "button");
-    return launcher;
+    if (!(anchor instanceof HTMLElement)) return null;
+    const button = document.createElement("button");
+    button.type = "button";
+    button.className = `${anchor.className} cf-portlet-button`;
+    button.title = msg("tool.description");
+    if (anchor.id !== "") button.id = anchor.id;
+    button.append(...anchor.childNodes);
+    anchor.replaceWith(button);
+    return button;
 }
 
 /** Installs the editor command styles once, before mounting its launchers. */

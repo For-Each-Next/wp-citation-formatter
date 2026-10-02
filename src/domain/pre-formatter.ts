@@ -1,5 +1,17 @@
 /**
- * Normalizes legacy parameter names and values before canonicalization.
+ * @file src/domain/pre-formatter.ts
+ * Purpose: Normalizes legacy parameter names and values before canonicalization.
+ *
+ * Table of contents:
+ * 1. Imports
+ * 2. PreFormatHandler
+ * 3. Constants and state
+ * 4. applyPreFormatHandlers
+ * 5. applyHandler
+ * 6. migrateDeadUrlParameter
+ * 7. normalizeDeadUrlStatus
+ * 8. formatTimeParameter
+ * 9. formatColonTime
  */
 
 import type { CitationParam } from "./types.ts";

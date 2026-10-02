@@ -1,3 +1,27 @@
+/**
+ * @file src/features/editor/command.css
+ * Purpose: src / features / editor / command module.
+ *
+ * Table of contents:
+ * 1. Styles and responsive rules
+ */
+
+.cf-portlet-button {
+    appearance: none;
+    background: none;
+    border: 0;
+    color: var(--color-progressive, #36c);
+    cursor: pointer;
+    font: inherit;
+    padding: 0;
+    text-align: start;
+}
+
+.cf-portlet-button:focus-visible {
+    outline: 2px solid var(--border-color-progressive, #36c);
+    outline-offset: 2px;
+}
+
 .cf-citation-launcher {
     background-color: var(--background-color-progressive, #36c);
     border: 1px solid var(--border-color-progressive, #36c);

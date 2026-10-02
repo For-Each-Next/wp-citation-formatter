@@ -1,4 +1,19 @@
-/** Native MediaWiki action notifications for Citation Formatter. */
+/**
+ * @file src/platform/mediawiki/notifications/index.ts
+ * Purpose: Native MediaWiki action notifications for Citation Formatter.
+ *
+ * Table of contents:
+ * 1. ActionNotificationType
+ * 2. ActionNotification
+ * 3. ActionNotifier
+ * 4. MediaWikiNotificationOptions
+ * 5. MediaWikiNotify
+ * 6. createActionNotifier
+ * 7. createNotificationOptions
+ * 8. toMediaWikiType
+ * 9. normalizeTagSegment
+ * 10. notifyWithMediaWiki
+ */
 
 export type ActionNotificationType = "error" | "info" | "success" | "warning";
 

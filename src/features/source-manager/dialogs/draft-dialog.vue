@@ -1,3 +1,11 @@
+<!--
+@file src/features/source-manager/dialogs/draft-dialog.vue
+Purpose: src / features / source manager / dialogs / draft dialog module.
+
+Table of contents:
+1. Template
+-->
+
 <template>
     <cdx-dialog
         v-model:open="draftPopupOpen"

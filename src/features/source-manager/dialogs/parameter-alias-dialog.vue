@@ -1,3 +1,11 @@
+<!--
+@file src/features/source-manager/dialogs/parameter-alias-dialog.vue
+Purpose: src / features / source manager / dialogs / parameter alias dialog module.
+
+Table of contents:
+1. Template
+-->
+
 <template>
     <cdx-dialog
         v-model:open="parameterAliasDialogOpen"

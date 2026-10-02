@@ -1,4 +1,25 @@
-/** Tests runtime TemplateData loading and browser-cache fallback. */
+/**
+ * @file tests/template-data-cache.test.ts
+ * Purpose: Tests runtime TemplateData loading and browser-cache fallback.
+ *
+ * Table of contents:
+ * 1. Imports
+ * 2. MemoryObjectStorage
+ * 3. Test scenarios
+ * 4. testTemplateDataCache
+ * 5. createTemplateDataApi
+ * 6. assertTemplateDataRequest
+ * 7. assertTemplateDataResult
+ * 8. assertFreshCacheHit
+ * 9. testRedirectCache
+ * 10. createRedirectTemplateDataApi
+ * 11. assertStaleCacheFallback
+ * 12. assertAuthoritativeMissingEvictsCache
+ * 13. createCaseSensitiveTemplateDataApi
+ * 14. createTemplateDataPage
+ * 15. createHostileTemplateDataApi
+ * 16. createHostileTemplateDataCache
+ */
 
 import assert from "node:assert/strict";
 import test from "node:test";

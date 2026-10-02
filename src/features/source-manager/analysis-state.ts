@@ -1,5 +1,23 @@
 /**
- * Reactive presentation state for citation-source consistency findings.
+ * @file src/features/source-manager/analysis-state.ts
+ * Purpose: Reactive presentation state for citation-source consistency findings.
+ *
+ * Table of contents:
+ * 1. Imports
+ * 2. SelectableSourceAnalysisOccurrence
+ * 3. EditableSourceAnalysisFinding
+ * 4. EditableCitationSourceAnalysis
+ * 5. AppliedAnalysisTarget
+ * 6. AppliedAnalysisFinding
+ * 7. SelectedAnalysisFinding
+ * 8. AnalysisTab
+ * 9. SourceAnalysisState
+ * 10. createEditableSourceAnalysis
+ * 11. refreshSourceAnalysis
+ * 12. buildAnalysisTabs
+ * 13. buildAnalysisTab
+ * 14. isAnalysisFindingInTab
+ * 15. getAnalysisFindingDescription
  */
 
 import {

@@ -1,5 +1,85 @@
 /**
- * End-to-end citation formatting and list-defined-reference conversion.
+ * @file src/domain/formatter.ts
+ * Purpose: End-to-end citation formatting and list-defined-reference conversion.
+ *
+ * Table of contents:
+ * 1. Imports
+ * 2. Constants and state
+ * 3. ReferenceDefinition
+ * 4. ReferenceFormattingStatus
+ * 5. PlainDefinitionOptions
+ * 6. ReferenceDefinitionOptions
+ * 7. FormattedCitation
+ * 8. ReferenceCitationCalls
+ * 9. CitationFormatResult
+ * 10. findUsedCitationTemplates
+ * 11. findUsedMetadataFreeCitationTemplates
+ * 12. findUsedTemplateNames
+ * 13. findRefTags
+ * 14. findTemplateCalls
+ * 15. formatCitationWikitext
+ * 16. summarizeFormatting
+ * 17. countRenamedReferenceTags
+ * 18. buildReferenceDefinitions
+ * 19. buildAllReplacements
+ * 20. createReferenceDefinition
+ * 21. countCitationParameterCollisions
+ * 22. replaceCitationCalls
+ * 23. formatCitationCalls
+ * 24. buildShortCitationSourceMap
+ * 25. getShortCitationIdentity
+ * 26. normalizeShortCitationAnchor
+ * 27. buildBundledDefinition
+ * 28. getBundledIdentities
+ * 29. getFirstAuthorKey
+ * 30. formatCitationBundle
+ * 31. buildFormattedDefinition
+ * 32. buildIdentityFreeDefinition
+ * 33. assignReferenceSections
+ * 34. SectionHeading
+ * 35. findSectionHeadings
+ * 36. getDefinitionUsePosition
+ * 37. getSectionAtPosition
+ * 38. assignLinkedCitationNames
+ * 39. buildExplicitCitationRefMap
+ * 40. parseLinkedCitation
+ * 41. normalizeCitationRefKey
+ * 42. assignFallbackNames
+ * 43. findReferenceCitationCalls
+ * 44. isCitationMaintenanceText
+ * 45. isNestedTemplateCall
+ * 46. assignCitationNames
+ * 47. assignSameSourceNames
+ * 48. isCitationDefinition
+ * 49. getDefinitionLocator
+ * 50. alphabeticSuffix
+ * 51. preserveConflictingNamedDefinitions
+ * 52. hasAdditionalReferenceAttributes
+ * 53. findUnsafeAdditionalContainers
+ * 54. ensureUniqueReferenceNames
+ * 55. preserveUnconvertedRNames
+ * 56. buildOldNameMap
+ * 57. buildTagReplacements
+ * 58. buildContainerReplacements
+ * 59. uniqueDefinitions
+ * 60. buildReferenceContainer
+ * 61. getContainerGeneralComments
+ * 62. isGeneralReferenceComment
+ * 63. buildSectionedDefinitionRows
+ * 64. compareReferenceOrder
+ * 65. formatReferenceSectionBanner
+ * 66. stripReferenceSectionComments
+ * 67. isReferenceSectionComment
+ * 68. buildDefinitionTag
+ * 69. buildReuseTag
+ * 70. appendMissingReferenceContainers
+ * 71. convertRTemplates
+ * 72. findActiveRTemplates
+ * 73. countRUseTemplates
+ * 74. findPreservedRReferenceNames
+ * 75. buildReferenceNameKey
+ * 76. getFinalReferenceNameKey
+ * 77. removeNestedReplacements
  */
 
 import {

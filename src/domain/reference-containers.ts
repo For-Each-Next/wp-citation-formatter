@@ -1,5 +1,17 @@
 /**
- * Parsing and range operations for list-defined-reference containers.
+ * @file src/domain/reference-containers.ts
+ * Purpose: Parsing and range operations for list-defined-reference containers.
+ *
+ * Table of contents:
+ * 1. Imports
+ * 2. ReferenceContainer
+ * 3. createEmptyReferenceContainer
+ * 4. findReferenceContainers
+ * 5. captureContainerPrefixes
+ * 6. getTrailingContainerText
+ * 7. isTagInContainers
+ * 8. getContainingGroup
+ * 9. buildReflistContainer
  */
 
 import {

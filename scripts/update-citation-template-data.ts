@@ -1,5 +1,20 @@
 /**
- * Refreshes supported citations from English and Chinese Wikipedia TemplateData.
+ * @file scripts/update-citation-template-data.ts
+ * Purpose: Refreshes supported citations from English and Chinese Wikipedia TemplateData.
+ *
+ * Table of contents:
+ * 1. Imports
+ * 2. Constants and state
+ * 3. TemplateDataDownloader
+ * 4. Initialization and execution
+ * 5. fetchAllCitationTemplateData
+ * 6. createTemplateDataApi
+ * 7. downloadTemplateData
+ * 8. writeTemplateDataModules
+ * 9. formatTemplateModule
+ * 10. formatTemplateDataIndex
+ * 11. templateFileStem
+ * 12. templateIdentifier
  */
 
 import { execFile } from "node:child_process";

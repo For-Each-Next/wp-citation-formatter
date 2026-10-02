@@ -1,4 +1,12 @@
-/** Tests shared locale resolution and named interpolation. */
+/**
+ * @file tests/translation.test.ts
+ * Purpose: Tests shared locale resolution and named interpolation.
+ *
+ * Table of contents:
+ * 1. Imports
+ * 2. Constants and state
+ * 3. Test scenarios
+ */
 
 import assert from "node:assert/strict";
 import test from "node:test";

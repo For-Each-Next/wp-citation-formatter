@@ -1,4 +1,11 @@
-/** Tests semantic source-preview segmentation. */
+/**
+ * @file tests/source-preview.test.ts
+ * Purpose: Tests semantic source-preview segmentation.
+ *
+ * Table of contents:
+ * 1. Imports
+ * 2. Test scenarios
+ */
 
 import assert from "node:assert/strict";
 import test from "node:test";

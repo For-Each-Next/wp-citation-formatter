@@ -1,4 +1,12 @@
-/** Tests canonical citation formatting and semantic names. */
+/**
+ * @file tests/citation.test.ts
+ * Purpose: Tests canonical citation formatting and semantic names.
+ *
+ * Table of contents:
+ * 1. Imports
+ * 2. Constants and state
+ * 3. Test scenarios
+ */
 
 import assert from "node:assert/strict";
 import test from "node:test";

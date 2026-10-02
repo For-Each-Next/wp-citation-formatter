@@ -1,4 +1,12 @@
-/** Tests package-local mapping of raw Citoid metadata. */
+/**
+ * @file tests/citation-metadata.test.ts
+ * Purpose: Tests package-local mapping of raw Citoid metadata.
+ *
+ * Table of contents:
+ * 1. Imports
+ * 2. Constants and state
+ * 3. Test scenarios
+ */
 
 import assert from "node:assert/strict";
 import test from "node:test";

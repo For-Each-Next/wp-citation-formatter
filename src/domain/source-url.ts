@@ -1,5 +1,22 @@
 /**
- * Source URL parsing, Wayback decoding, and matching normalization.
+ * @file src/domain/source-url.ts
+ * Purpose: Source URL parsing, Wayback decoding, and matching normalization.
+ *
+ * Table of contents:
+ * 1. Imports
+ * 2. ParsedSourceUrl
+ * 3. ParsedSourceInput
+ * 4. parseSourceUrl
+ * 5. parseSourceInput
+ * 6. normalizeSourceUrl
+ * 7. sanitizeSourceUrl
+ * 8. parseHttpUrl
+ * 9. parseWaybackUrl
+ * 10. isWaybackHost
+ * 11. decodeWaybackTarget
+ * 12. formatWaybackDate
+ * 13. decodeUrlEntities
+ * 14. sanitizeParsedUrl
  */
 
 import { isGregorianCalendarDate } from "./calendar-date.ts";

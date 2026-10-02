@@ -1,4 +1,11 @@
-/** Tests lazy construct-focused shared wikitext operations. */
+/**
+ * @file tests/wikitext-query.test.ts
+ * Purpose: Tests lazy construct-focused shared wikitext operations.
+ *
+ * Table of contents:
+ * 1. Imports
+ * 2. Test scenarios
+ */
 
 import assert from "node:assert/strict";
 import test from "node:test";

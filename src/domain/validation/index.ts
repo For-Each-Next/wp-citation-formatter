@@ -1,3 +1,14 @@
+/**
+ * @file src/domain/validation/index.ts
+ * Purpose: src / domain / validation / index module.
+ *
+ * Table of contents:
+ * 1. Imports
+ * 2. Constants and state
+ * 3. getCitationValidationConfig
+ * 4. Exports
+ */
+
 import { ENWIKI_CITATION_VALIDATION } from "./enwiki.ts";
 import type { CitationValidationConfig } from "./types.ts";
 import { ZHWIKI_CITATION_VALIDATION } from "./zhwiki.ts";

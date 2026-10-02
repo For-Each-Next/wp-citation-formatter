@@ -1,4 +1,21 @@
 /**
+ * @file src/features/source-manager/template-options.ts
+ * Purpose: src / features / source manager / template options module.
+ *
+ * Table of contents:
+ * 1. Imports
+ * 2. CitationTemplateName
+ * 3. CitationTemplateType
+ * 4. CitationTemplateDefinition
+ * 5. Constants and state
+ * 6. Initialization and execution
+ * 7. getSourceDraftTemplateOptions
+ * 8. validateTemplateDefinitions
+ * 9. isDefinitionGroupAlphabetical
+ * 10. getTemplateTierRank
+ */
+
+/**
  * Orders citation-template selector options by importance and type.
  * Sorts each resulting group alphabetically.
  */

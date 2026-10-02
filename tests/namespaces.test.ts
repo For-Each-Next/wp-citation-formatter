@@ -1,4 +1,12 @@
-/** Tests current-wiki Template namespaces. */
+/**
+ * @file tests/namespaces.test.ts
+ * Purpose: Tests current-wiki Template namespaces.
+ *
+ * Table of contents:
+ * 1. Imports
+ * 2. Constants and state
+ * 3. Test scenarios
+ */
 
 import assert from "node:assert/strict";
 import test from "node:test";

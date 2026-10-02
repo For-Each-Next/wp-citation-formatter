@@ -1,4 +1,19 @@
-/** Builds the self-contained MediaWiki gadget and browser userscript files. */
+/**
+ * @file scripts/build.mjs
+ * Purpose: Builds the self-contained MediaWiki gadget and browser userscript files.
+ *
+ * Table of contents:
+ * 1. Imports
+ * 2. Constants and state
+ * 3. Initialization and execution
+ * 4. prepareAsset
+ * 5. bundleSource
+ * 6. minifySource
+ * 7. licenseNotice
+ * 8. documentationHeader
+ * 9. mediaWikiArtifact
+ * 10. userscriptArtifact
+ */
 
 import { mkdir, readFile, rm, writeFile } from "node:fs/promises";
 import { dirname, join } from "node:path";
@@ -86,6 +101,7 @@ async function bundleSource(entryPoint, readableAssets = false) {
     const result = await build({
         absWorkingDir: root,
         bundle: true,
+        preserveSymlinks: true,
         define: {
             __GADGET_VERSION__: JSON.stringify(manifest.version),
             ...Object.fromEntries(
@@ -180,17 +196,27 @@ function licenseNotice() {
     ].join("\n");
 }
 
-function mediaWikiArtifact(program) {
+function documentationHeader() {
     return [
         "/**",
         " * Citation Formatter",
-        ` * ${manifest.description}`,
-        " * Format citation templates, manage sources, and review citation issues.",
+        " *",
+        ` * Purpose: ${manifest.description}`,
         " *",
         ` * @name ${manifest.name}`,
         ` * @version ${manifest.version}`,
         " * @license CC0-1.0 AND MIT AND CC-BY-4.0 AND BSD-2-Clause",
+        " *",
+        " * Table of contents:",
+        " * 1. Metadata and license notices",
+        " * 2. MediaWiki bootstrap and browser program",
         " */",
+    ].join("\n");
+}
+
+function mediaWikiArtifact(program) {
+    return [
+        documentationHeader(),
         "",
         licenseNotice(),
         "",
@@ -210,9 +236,14 @@ function userscriptArtifact(program) {
         `// @description  ${manifest.description}`,
         "// @license      CC0-1.0 AND MIT AND CC-BY-4.0 AND BSD-2-Clause",
         "// @match        https://*.wikipedia.org/*",
+        "// @homepageURL  https://github.com/For-Each-Next/wp-citation-formatter",
+        "// @downloadURL  https://github.com/For-Each-Next/wp-citation-formatter/releases/latest/download/citation_formatter.user.js",
+        "// @updateURL    https://github.com/For-Each-Next/wp-citation-formatter/releases/latest/download/citation_formatter.user.js",
         "// @grant        none",
         "// @run-at       document-end",
         "// ==/UserScript==",
+        "",
+        documentationHeader(),
         "",
         licenseNotice(),
         "",

@@ -1,5 +1,10 @@
 /**
- * Gregorian calendar validation shared by citation date workflows.
+ * @file src/domain/calendar-date.ts
+ * Purpose: Gregorian calendar validation shared by citation date workflows.
+ *
+ * Table of contents:
+ * 1. isGregorianCalendarDate
+ * 2. isCalendarDayWithinUtcMonth
  */
 
 /**

@@ -1,4 +1,15 @@
-/** Template namespace discovery with static Wikipedia fast paths. */
+/**
+ * @file src/platform/mediawiki/namespaces.ts
+ * Purpose: Template namespace discovery with static Wikipedia fast paths.
+ *
+ * Table of contents:
+ * 1. Imports
+ * 2. CitationNamespaceApi
+ * 3. TemplateNameContextResolver
+ * 4. createTemplateNameContextResolver
+ * 5. loadNamespaceCatalog
+ * 6. getStaticSource
+ */
 
 import {
     decodeNamespaceCatalog,

@@ -1,4 +1,14 @@
-/** Installs Citation Formatter styles bundled with the gadget. */
+/**
+ * @file src/features/source-manager/styles.ts
+ * Purpose: Installs Citation Formatter styles bundled with the gadget.
+ *
+ * Table of contents:
+ * 1. Imports
+ * 2. Constants and state
+ * 3. installCitationFormatterStyles
+ * 4. getBundledStyles
+ * 5. isNonEmpty
+ */
 
 import { SOURCE_MANAGER_DIALOG_STYLES } from "./dialogs.ts";
 

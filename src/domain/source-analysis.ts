@@ -1,5 +1,47 @@
 /**
- * Article-wide citation summaries and opt-in consistency replacements.
+ * @file src/domain/source-analysis.ts
+ * Purpose: Article-wide citation summaries and opt-in consistency replacements.
+ *
+ * Table of contents:
+ * 1. Imports
+ * 2. Constants and state
+ * 3. SourceAnalysisFindingCategory
+ * 4. SourceAnalysisCell
+ * 5. SourceAnalysisValue
+ * 6. SourceAnalysisOccurrence
+ * 7. SourceAnalysisFinding
+ * 8. CitationSourceAnalysis
+ * 9. SourceAnalysisMessages
+ * 10. SourceAnalysisReplacement
+ * 11. FieldOccurrence
+ * 12. analyzeCitationSources
+ * 13. applySourceAnalysisReplacements
+ * 14. findDomainFieldInconsistencies
+ * 15. groupDomainFieldOccurrences
+ * 16. buildDomainFieldFinding
+ * 17. getDomainFieldCategory
+ * 18. findAuthorFormattingInconsistencies
+ * 19. groupAuthorOccurrences
+ * 20. buildAuthorFinding
+ * 21. findAliasInconsistencies
+ * 22. groupAliasOccurrences
+ * 23. getAliasParameterFamily
+ * 24. getAliasSubjectIdentity
+ * 25. buildAliasOccurrence
+ * 26. buildAliasFinding
+ * 27. countAliasValues
+ * 28. buildAnalysisOccurrence
+ * 29. getSourceDomain
+ * 30. countOccurrenceValues
+ * 31. countAnalysisValues
+ * 32. normalizeDisplayValue
+ * 33. normalizeParameterName
+ * 34. groupSourceAnalysisReplacements
+ * 35. isEmptySourceAnalysisReplacement
+ * 36. registerSourceAnalysisReplacement
+ * 37. assertCurrentSource
+ * 38. cloneSourceDraft
+ * 39. applyDraftReplacements
  */
 
 import { cleanValue } from "./citation.ts";

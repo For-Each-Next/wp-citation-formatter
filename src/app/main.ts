@@ -1,5 +1,16 @@
 /**
- * Composition root for the browser gadget.
+ * @file src/app/main.ts
+ * Purpose: Composition root for the browser gadget.
+ *
+ * Table of contents:
+ * 1. Imports
+ * 2. Constants and state
+ * 3. BrowserRuntime
+ * 4. start
+ * 5. mountWhenMediaWikiIsReady
+ * 6. isWikitextPage
+ * 7. mountCitationFormatter
+ * 8. getTemplateDataStorage
  */
 
 import {
@@ -31,6 +42,10 @@ import {
     createActionNotifier,
     type ActionNotifier,
 } from "../platform/mediawiki/notifications/index.ts";
+import {
+    getEditBox,
+    writePreservingPosition,
+} from "../platform/mediawiki/edit-box/index.ts";
 
 const cs1Review = createCs1ReviewWorkflow({
     buildCheckWikitext: buildCs1CheckWikitext,
@@ -66,13 +81,13 @@ export function start(): void {
     });
 }
 
-/** Loads the portlet API before mounting the editor command. */
+/** Loads the portlet API and Codex styles before mounting editor actions. */
 function mountWhenMediaWikiIsReady(runtime: BrowserRuntime): void {
     if (!isWikitextPage()) {
         return;
     }
     void mw.loader
-        .using("mediawiki.util")
+        .using(["mediawiki.util", "@wikimedia/codex"])
         .then(function mount(): void {
             mountCitationFormatter(runtime);
             runtime.finishLoading({ outcome: "ready" });
@@ -101,6 +116,7 @@ function mountCitationFormatter(runtime: BrowserRuntime): void {
     const templateNames = createTemplateNameContextResolver(wikiId);
     const openCitationFormatterDialog =
         sourceManagerUi.createOpenCitationFormatterDialog({
+            writePreservingPosition,
             cs1Review,
             fetchAvailableArchive,
             loadCitationTemplateData(names) {
@@ -125,6 +141,7 @@ function mountCitationFormatter(runtime: BrowserRuntime): void {
             },
         });
     citationEditor.mountCitationFormatter(openCitationFormatterDialog, {
+        getEditor: getEditBox,
         logger: runtime.logger.child("ui.editor"),
         notifyAction: runtime.notifyAction,
     });

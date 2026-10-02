@@ -1,5 +1,18 @@
 /**
- * Protected wikitext ranges skipped by citation transformations.
+ * @file src/domain/protected-wikitext.ts
+ * Purpose: Protected wikitext ranges skipped by citation transformations.
+ *
+ * Table of contents:
+ * 1. Imports
+ * 2. WikitextRange
+ * 3. findReferenceAttributeRanges
+ * 4. Constants and state
+ * 5. findCitationFormattingProtectedRanges
+ * 6. findCitationManagementProtectedRanges
+ * 7. findSourceDiscoveryProtectedRanges
+ * 8. findProtectedWikitextRanges
+ * 9. isInWikitextRanges
+ * 10. maskWikitextRanges
  */
 
 import { wikitext } from "./parsing/index.ts";

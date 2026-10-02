@@ -1,4 +1,12 @@
-/** Runs offline browser tests with temporary artifacts. */
+/**
+ * @file scripts/test-ui.mjs
+ * Purpose: Runs offline browser tests with temporary artifacts.
+ *
+ * Table of contents:
+ * 1. Imports
+ * 2. Constants and state
+ * 3. Initialization and execution
+ */
 
 import { spawn } from "node:child_process";
 import { mkdtemp, rm } from "node:fs/promises";

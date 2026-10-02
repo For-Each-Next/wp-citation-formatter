@@ -1,5 +1,43 @@
 /**
- * Validation for editable CS1 citation parameters.
+ * @file src/domain/source-validation.ts
+ * Purpose: Validation for editable CS1 citation parameters.
+ *
+ * Table of contents:
+ * 1. Imports
+ * 2. SourceDraftLike
+ * 3. SourceDraftRowLike
+ * 4. SourceDraftRowErrors
+ * 5. SourceDraftErrors
+ * 6. SourceValidationMessages
+ * 7. Constants and state
+ * 8. getSourceDraftErrors
+ * 9. getValidationTemplateData
+ * 10. validateDraftRelationships
+ * 11. DraftRowValidationContext
+ * 12. validateDraftRow
+ * 13. validateDraftRowName
+ * 14. isSafeDraftParameterName
+ * 15. validateDraftRowAlias
+ * 16. validateDraftRowValue
+ * 17. addCellError
+ * 18. buildGlobalSupportedNames
+ * 19. buildGlobalCanonicalNames
+ * 20. normalizeParameterName
+ * 21. ArchiveValidationContext
+ * 22. validateArchivePair
+ * 23. getTrimmedValue
+ * 24. MissingArchiveField
+ * 25. addMissingArchiveError
+ * 26. validateParameterDependencies
+ * 27. validateDynamicDependency
+ * 28. buildDraftRowIndex
+ * 29. DependencyValidationContext
+ * 30. validateDependency
+ * 31. isValidCitationDate
+ * 32. isValidChineseDate
+ * 33. isValidIsoDate
+ * 34. isValidEnglishDate
+ * 35. isValidNamedMonthDate
  */
 
 import { isCalendarDayWithinUtcMonth } from "./calendar-date.ts";

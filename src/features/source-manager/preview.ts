@@ -1,5 +1,14 @@
 /**
- * Semantic segmentation for citation-source previews.
+ * @file src/features/source-manager/preview.ts
+ * Purpose: Semantic segmentation for citation-source previews.
+ *
+ * Table of contents:
+ * 1. Imports
+ * 2. SourcePreviewPart
+ * 3. SourcePreviewRange
+ * 4. buildSourcePreview
+ * 5. findParameterNameRanges
+ * 6. findAliasCommentRanges
  */
 
 import { wikitext } from "../../domain/parsing/index.ts";

@@ -1,5 +1,13 @@
 /**
- * Minimal MediaWiki Vue and Codex contracts used by Citation Formatter.
+ * @file src/features/source-manager/codex.ts
+ * Purpose: Minimal MediaWiki Vue and Codex contracts used by Citation Formatter.
+ *
+ * Table of contents:
+ * 1. VueModule
+ * 2. VueApp
+ * 3. CodexComponents
+ * 4. ResourceLoaderRequire
+ * 5. registerCitationFormatterComponents
  */
 
 export interface VueModule {

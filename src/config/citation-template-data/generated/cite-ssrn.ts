@@ -1,4 +1,14 @@
 /**
+ * @file src/config/citation-template-data/generated/cite-ssrn.ts
+ * Purpose: src / config / citation template data / generated / cite ssrn module.
+ *
+ * Table of contents:
+ * 1. Imports
+ * 2. Constants and state
+ * 3. Exports
+ */
+
+/**
  * Generated English-first Wikipedia TemplateData for cite ssrn.
  * Chinese Wikipedia supplies additional ordering and fallback metadata.
  *

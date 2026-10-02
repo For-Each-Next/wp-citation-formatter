@@ -1,4 +1,11 @@
-/** Wikitext replacements owned by Citation Formatter. */
+/**
+ * @file src/domain/wikitext.ts
+ * Purpose: Wikitext replacements owned by Citation Formatter.
+ *
+ * Table of contents:
+ * 1. Imports
+ * 2. applyReplacements
+ */
 
 import type { TextReplacement } from "./types.ts";
 

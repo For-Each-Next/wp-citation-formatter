@@ -1,9 +1,31 @@
-/** Tests shared MediaWiki edit-box backends. */
+/**
+ * @file tests/edit-box.test.ts
+ * Purpose: Tests shared MediaWiki edit-box backends.
+ *
+ * Table of contents:
+ * 1. Imports
+ * 2. Constants and state
+ * 3. Test scenarios
+ * 4. CodeMirrorTransaction
+ * 5. CodeMirrorFixtureState
+ * 6. VisualEditorFixtureState
+ * 7. createCodeMirrorFixture
+ * 8. createCodeMirrorView
+ * 9. applyCodeMirrorTransaction
+ * 10. createVisualEditorFixture
+ * 11. createVisualEditorModel
+ * 12. createVisualEditorView
+ * 13. createVisualEditorFragments
+ * 14. createRootVisualEditorFragment
+ * 15. createCurrentVisualEditorFragment
+ * 16. createRestoredVisualEditorFragment
+ * 17. installMediaWikiHookMock
+ */
 
 import assert from "node:assert/strict";
 import test from "node:test";
 
-import * as editBox from "../src/platform/edit-box/index.ts";
+import * as editBox from "../src/platform/mediawiki/edit-box/index.ts";
 
 const { createEditBox, registerEditBoxHooks, writePreservingPosition } =
     editBox;
@@ -114,7 +136,9 @@ test("uses a registered enhanced editor backend", () => {
             calls.push(`preserve:${value}`);
         },
     };
-    const unregister = editBox.registerEditBoxBackend(textarea, backend);
+    const backendKey = Symbol.for("mediawiki-gadgets.edit-box-backend");
+    const target = textarea as unknown as Record<PropertyKey, unknown>;
+    target[backendKey] = backend;
     const editor = createEditBox(textarea);
 
     assert.equal(editor.read(), "enhanced source");
@@ -131,7 +155,7 @@ test("uses a registered enhanced editor backend", () => {
         "focus",
     ]);
 
-    unregister();
+    delete target[backendKey];
     assert.equal(editor.read(), "native source");
 });
 

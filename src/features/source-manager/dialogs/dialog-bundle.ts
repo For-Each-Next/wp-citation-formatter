@@ -1,4 +1,15 @@
-/** Template and styles owned by one Citation Formatter dialog. */
+/**
+ * @file src/features/source-manager/dialogs/dialog-bundle.ts
+ * Purpose: Template and styles owned by one Citation Formatter dialog.
+ *
+ * Table of contents:
+ * 1. CitationDialogBundle
+ * 2. assembleCitationDialogs
+ * 3. getDialogTemplate
+ * 4. getDialogStyles
+ * 5. isNonEmpty
+ */
+
 export interface CitationDialogBundle {
     readonly styles: string;
     readonly template: string;

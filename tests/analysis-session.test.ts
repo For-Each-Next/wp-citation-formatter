@@ -1,4 +1,11 @@
-/** Tests session-safe undo snapshots for citation analysis. */
+/**
+ * @file tests/analysis-session.test.ts
+ * Purpose: Tests session-safe undo snapshots for citation analysis.
+ *
+ * Table of contents:
+ * 1. Imports
+ * 2. Test scenarios
+ */
 
 import assert from "node:assert/strict";
 import test from "node:test";

@@ -1,4 +1,11 @@
-/** Tests the side-effect-free Citation Formatter entry point. */
+/**
+ * @file tests/api.test.ts
+ * Purpose: Tests the side-effect-free Citation Formatter entry point.
+ *
+ * Table of contents:
+ * 1. Imports
+ * 2. Test scenarios
+ */
 
 import assert from "node:assert/strict";
 import test from "node:test";

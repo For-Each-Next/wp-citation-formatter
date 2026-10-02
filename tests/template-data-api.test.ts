@@ -1,4 +1,14 @@
-/** Tests the shared single-template and bulk TemplateData loader. */
+/**
+ * @file tests/template-data-api.test.ts
+ * Purpose: Tests the shared single-template and bulk TemplateData loader.
+ *
+ * Table of contents:
+ * 1. Imports
+ * 2. Test scenarios
+ * 3. createTemplateDataApi
+ * 4. createTemplateDataResponse
+ * 5. createTemplateDataPage
+ */
 
 import assert from "node:assert/strict";
 import test from "node:test";

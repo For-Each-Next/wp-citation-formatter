@@ -1,5 +1,11 @@
 /**
- * Session-scoped undo snapshots for citation-consistency writes.
+ * @file src/features/source-manager/analysis-session.ts
+ * Purpose: Session-scoped undo snapshots for citation-consistency writes.
+ *
+ * Table of contents:
+ * 1. AnalysisUndoSnapshot
+ * 2. appendAnalysisUndo
+ * 3. getAnalysisUndoText
  */
 
 export interface AnalysisUndoSnapshot {

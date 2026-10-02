@@ -1,5 +1,18 @@
 /**
- * Encoding helpers for citation reference attributes.
+ * @file src/domain/ref-attributes.ts
+ * Purpose: Encoding helpers for citation reference attributes.
+ *
+ * Table of contents:
+ * 1. Imports
+ * 2. ReferenceNameEscapeOptions
+ * 3. decodeReferenceAttribute
+ * 4. escapeQuotedAttribute
+ * 5. decodeReferenceDetailsAttribute
+ * 6. escapeReferenceDetails
+ * 7. formatReferenceDetailsAttribute
+ * 8. escapeReferenceName
+ * 9. formatReferenceGroupAttribute
+ * 10. stripOptionalReferenceNameQuotes
  */
 
 import { decodeHTMLStrict } from "entities";
